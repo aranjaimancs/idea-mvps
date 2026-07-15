@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dad Joke Generator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #fef9c3;
+      font-family: 'Georgia', serif;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #713f12;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    #joke-btn {
+      font-size: 1.25rem;
+      font-weight: bold;
+      padding: 0.85rem 2rem;
+      border: 3px solid #92400e;
+      border-radius: 12px;
+      background: #f59e0b;
+      color: #1c1917;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      user-select: none;
+    }
+
+    #joke-btn:hover:not(:disabled) {
+      background: #d97706;
+    }
+
+    #joke-btn:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+
+    #joke-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    #joke-box {
+      margin-top: 2rem;
+      max-width: 600px;
+      width: 100%;
+      min-height: 6rem;
+      background: #fff;
+      border: 2px solid #d97706;
+      border-radius: 14px;
+      padding: 1.5rem 1.75rem;
+      font-size: 1.2rem;
+      line-height: 1.65;
+      color: #1c1917;
+      text-align: center;
+      display: none;
+    }
+
+    #joke-box.visible {
+      display: block;
+    }
+
+    #joke-box.loading {
+      color: #a16207;
+      font-style: italic;
+    }
+
+    #error-msg {
+      margin-top: 1rem;
+      color: #b91c1c;
+      font-size: 0.9rem;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Dad Joke Generator</h1>
+
+  <button id="joke-btn">Give me a dad joke</button>
+
+  <div id="joke-box" role="status" aria-live="polite"></div>
+  <p id="error-msg"></p>
+
+  <script>
+    const btn = document.getElementById('joke-btn');
+    const box = document.getElementById('joke-box');
+    const err = document.getElementById('error-msg');
+
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      err.style.display = 'none';
+      box.textContent = 'Fetching a groan-worthy joke…';
+      box.classList.add('visible', 'loading');
+
+      try {
+        const res = await fetch('https://icanhazdadjoke.com/', {
+          headers: { 'Accept': 'application/json' }
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        box.textContent = data.joke;
+        box.classList.remove('loading');
+      } catch (e) {
+        box.classList.remove('loading');
+        box.classList.remove('visible');
+        err.textContent = 'Could not load a joke. Check your connection and try again.';
+        err.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+
+</body>
+</html>
