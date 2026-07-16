@@ -16,16 +16,51 @@
       background: #fef9c3;
       font-family: 'Georgia', serif;
       padding: 2rem;
+      color: #1c1917;
     }
 
     h1 {
       font-size: 2rem;
       color: #713f12;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
       text-align: center;
     }
 
+    #joke-box {
+      max-width: 640px;
+      width: 100%;
+      min-height: 8rem;
+      background: #fff;
+      border: 2px solid #d97706;
+      border-radius: 14px;
+      padding: 2rem;
+      font-size: 1.5rem;
+      line-height: 1.6;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #timer {
+      margin-top: 1.5rem;
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #92400e;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 2px;
+    }
+
+    #timer-label {
+      font-size: 0.85rem;
+      color: #a16207;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 0.25rem;
+    }
+
     #joke-btn {
+      margin-top: 1.75rem;
       font-size: 1.25rem;
       font-weight: bold;
       padding: 0.85rem 2rem;
@@ -36,92 +71,24 @@
       cursor: pointer;
       transition: background 0.15s, transform 0.1s;
       user-select: none;
+      font-family: inherit;
     }
 
-    #joke-btn:hover:not(:disabled) {
-      background: #d97706;
-    }
-
-    #joke-btn:active:not(:disabled) {
-      transform: scale(0.97);
-    }
-
-    #joke-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    #joke-box {
-      margin-top: 2rem;
-      max-width: 600px;
-      width: 100%;
-      min-height: 6rem;
-      background: #fff;
-      border: 2px solid #d97706;
-      border-radius: 14px;
-      padding: 1.5rem 1.75rem;
-      font-size: 1.2rem;
-      line-height: 1.65;
-      color: #1c1917;
-      text-align: center;
-      display: none;
-    }
-
-    #joke-box.visible {
-      display: block;
-    }
-
-    #joke-box.loading {
-      color: #a16207;
-      font-style: italic;
-    }
-
-    #error-msg {
-      margin-top: 1rem;
-      color: #b91c1c;
-      font-size: 0.9rem;
-      display: none;
-    }
+    #joke-btn:hover { background: #d97706; }
+    #joke-btn:active { transform: scale(0.97); }
   </style>
 </head>
 <body>
 
   <h1>Dad Joke Generator</h1>
 
-  <button id="joke-btn">Give me a dad joke</button>
+  <div id="joke-box" role="status" aria-live="polite">Loading a joke…</div>
 
-  <div id="joke-box" role="status" aria-live="polite"></div>
-  <p id="error-msg"></p>
+  <div id="timer" aria-live="off">5:00</div>
+  <div id="timer-label">until the next groaner</div>
 
-  <script>
-    const btn = document.getElementById('joke-btn');
-    const box = document.getElementById('joke-box');
-    const err = document.getElementById('error-msg');
+  <button id="joke-btn">New Joke Now</button>
 
-    btn.addEventListener('click', async () => {
-      btn.disabled = true;
-      err.style.display = 'none';
-      box.textContent = 'Fetching a groan-worthy joke…';
-      box.classList.add('visible', 'loading');
-
-      try {
-        const res = await fetch('https://icanhazdadjoke.com/', {
-          headers: { 'Accept': 'application/json' }
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        box.textContent = data.joke;
-        box.classList.remove('loading');
-      } catch (e) {
-        box.classList.remove('loading');
-        box.classList.remove('visible');
-        err.textContent = 'Could not load a joke. Check your connection and try again.';
-        err.style.display = 'block';
-      } finally {
-        btn.disabled = false;
-      }
-    });
-  </script>
-
+  <script src="script.js"></script>
 </body>
 </html>
