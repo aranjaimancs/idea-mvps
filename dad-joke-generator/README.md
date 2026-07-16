@@ -1,18 +1,35 @@
 # Dad Joke Generator
 
+A zero-dependency static web page that serves up a new dad joke every 5 minutes —
+no refresh, no clicks, no backend.
+
 ## What was built
 
-A single static HTML page that fetches a random dad joke from the free [icanhazdadjoke.com](https://icanhazdadjoke.com) API and displays it on screen. No backend, no account, no install.
+- **Big joke display** showing a random dad joke.
+- **A live MM:SS countdown** starting at `5:00`.
+- **A "Tell me one now" button** for the impatient.
 
-## How to open it
+### Core interaction
+On load, a random joke is chosen from ~50 hardcoded jokes and the timer starts.
+When the timer hits `0:00`, a fresh random joke is automatically swapped in and
+the timer resets to `5:00`. Clicking **Tell me one now** swaps the joke instantly
+and restarts the countdown.
 
-Open `index.html` directly in any modern browser — no local server needed.
+## How to run
+
+Just open `index.html` in any browser — no server or install required.
+
+```
+open index.html      # macOS
+# or double-click the file
+```
+
+It's a fully static site (`index.html` + `script.js`), deployable as-is to
+GitHub Pages or any static host.
 
 ## First 30 seconds
 
-1. Open `index.html` in your browser.
-2. Click the **"Give me a dad joke"** button.
-3. Read the joke. Groan appropriately.
-4. Click again for another one.
-
-That's it. The core loop is: click → loading indicator → joke appears → click again.
+1. Open the page — a dad joke is already waiting for you.
+2. Watch the timer tick down from `5:00`.
+3. Impatient? Hit **Tell me one now** for an instant new groaner.
+4. Leave the tab open — a new joke appears automatically every 5 minutes.
