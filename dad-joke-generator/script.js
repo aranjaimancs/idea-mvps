@@ -58,6 +58,7 @@ const JOKES = [
 ];
 
 const DURATION = 5 * 60; // seconds
+const API_URL = 'https://icanhazdadjoke.com/';
 
 const jokeBox = document.getElementById('joke-box');
 const timerEl = document.getElementById('timer');
@@ -76,14 +77,29 @@ function pickRandomJoke() {
   return JOKES[idx];
 }
 
+// Try the free icanhazdadjoke.com API first; fall back to the local list if the
+// fetch fails (offline, blocked, opened via file://, etc.). Either way the page
+// always shows a joke.
+async function fetchJoke() {
+  try {
+    const res = await fetch(API_URL, { headers: { Accept: 'application/json' } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data && data.joke) return data.joke;
+    throw new Error('No joke in response');
+  } catch (err) {
+    return pickRandomJoke();
+  }
+}
+
 function renderTimer() {
   const m = Math.floor(remaining / 60);
   const s = remaining % 60;
   timerEl.textContent = `${m}:${String(s).padStart(2, '0')}`;
 }
 
-function newJoke() {
-  jokeBox.textContent = pickRandomJoke();
+async function newJoke() {
+  jokeBox.textContent = await fetchJoke();
   remaining = DURATION;
   renderTimer();
 }
@@ -91,6 +107,8 @@ function newJoke() {
 function tick() {
   remaining -= 1;
   if (remaining <= 0) {
+    remaining = DURATION; // reset immediately so the swap can't double-fire
+    renderTimer();
     newJoke(); // swaps joke and resets timer to 5:00
     return;
   }
@@ -107,6 +125,6 @@ btn.addEventListener('click', () => {
   startTimer(); // restart the countdown from the click moment
 });
 
-// On page load: show a random joke and start the countdown.
+// On page load: show a joke and start the countdown.
 newJoke();
 startTimer();
