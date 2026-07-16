@@ -1,143 +1,212 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dad Joke Generator</title>
-  <style>
-    :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --accent: #f59e0b;
-      --accent-hover: #fbbf24;
-      --text: #f1f5f9;
-    }
-    * { box-sizing: border-box; }
-    html, body { height: 100%; margin: 0; }
-    body {
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      background: radial-gradient(circle at top, #1e293b, var(--bg));
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-    .wrap {
-      width: 100%;
-      max-width: 560px;
-      text-align: center;
-    }
-    h1 {
-      font-size: clamp(1.6rem, 4vw, 2.4rem);
-      margin: 0 0 32px;
-      letter-spacing: -0.02em;
-    }
-    button {
-      font-size: 1.4rem;
-      font-weight: 700;
-      padding: 20px 40px;
-      border: none;
-      border-radius: 999px;
-      background: var(--accent);
-      color: #1a1204;
-      cursor: pointer;
-      transition: transform 0.1s ease, background 0.2s ease, box-shadow 0.2s ease;
-      box-shadow: 0 10px 30px rgba(245, 158, 11, 0.35);
-    }
-    button:hover { background: var(--accent-hover); }
-    button:active { transform: scale(0.96); }
-    .joke-box {
-      margin-top: 36px;
-      min-height: 120px;
-      background: var(--card);
-      border-radius: 16px;
-      padding: 28px 24px;
-      font-size: 1.3rem;
-      line-height: 1.5;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
-    }
-    .fade-in { animation: fadeIn 0.6s ease forwards; }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .hint { margin-top: 16px; opacity: 0.5; font-size: 0.85rem; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dad Joke Generator</title>
+<style>
+  :root {
+    --bg1: #6a11cb;
+    --bg2: #2575fc;
+    --card: #ffffff;
+    --text: #1c1c2b;
+    --accent: #2575fc;
+    --accent-hover: #1b5fd0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(135deg, var(--bg1), var(--bg2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: var(--text);
+    min-height: 100vh;
+  }
+  .wrap {
+    width: 100%;
+    max-width: 560px;
+    text-align: center;
+  }
+  h1 {
+    color: #fff;
+    font-size: 2rem;
+    margin-bottom: 6px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .subtitle {
+    color: rgba(255,255,255,0.85);
+    margin-bottom: 24px;
+    font-size: 0.95rem;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 40px 30px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .joke {
+    font-size: 1.4rem;
+    line-height: 1.5;
+    opacity: 1;
+    transition: opacity 0.35s ease;
+  }
+  .joke.fade { opacity: 0; }
+  .buttons {
+    margin-top: 26px;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  button {
+    border: none;
+    border-radius: 50px;
+    padding: 14px 28px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s ease, background 0.2s ease;
+    color: #fff;
+  }
+  button:active { transform: scale(0.96); }
+  .btn-primary { background: var(--accent); }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-copy {
+    background: rgba(255,255,255,0.25);
+    border: 2px solid rgba(255,255,255,0.6);
+  }
+  .btn-copy:hover { background: rgba(255,255,255,0.4); }
+  .toast {
+    margin-top: 16px;
+    color: #fff;
+    font-size: 0.9rem;
+    height: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .toast.show { opacity: 1; }
+  @media (max-width: 480px) {
+    h1 { font-size: 1.5rem; }
+    .joke { font-size: 1.15rem; }
+    .card { padding: 30px 20px; }
+    button { flex: 1 1 auto; }
+  }
+</style>
 </head>
 <body>
-  <main class="wrap">
-    <h1>😄 Dad Joke Generator</h1>
-    <button id="jokeBtn">Tell me a joke</button>
-    <div id="jokeBox" class="joke-box">Click the button for your first groan…</div>
-    <p class="hint">Warning: side effects may include eye-rolling.</p>
-  </main>
+  <div class="wrap">
+    <h1>Dad Joke Generator</h1>
+    <p class="subtitle">Groan-worthy jokes on demand 👨</p>
+    <div class="card">
+      <p class="joke" id="joke">Click the button for your first dad joke!</p>
+    </div>
+    <div class="buttons">
+      <button class="btn-primary" id="getBtn">Get Joke</button>
+      <button class="btn-copy" id="copyBtn">Copy Joke</button>
+    </div>
+    <div class="toast" id="toast"></div>
+  </div>
 
-  <script>
-    const FALLBACK_JOKES = [
-      "I'm reading a book about anti-gravity. It's impossible to put down.",
-      "Did you hear about the restaurant on the moon? Great food, no atmosphere.",
-      "Why don't scientists trust atoms? Because they make up everything.",
-      "I only know 25 letters of the alphabet. I don't know y.",
-      "What do you call a fake noodle? An impasta.",
-      "Why did the scarecrow win an award? He was outstanding in his field.",
-      "I used to hate facial hair, but then it grew on me.",
-      "What do you call cheese that isn't yours? Nacho cheese.",
-      "I would tell you a construction joke, but I'm still working on it.",
-      "Why don't eggs tell jokes? They'd crack each other up.",
-      "How do you organize a space party? You planet.",
-      "I'm on a seafood diet. Every time I see food, I eat it.",
-      "Why did the bicycle fall over? Because it was two-tired.",
-      "What did the ocean say to the beach? Nothing, it just waved.",
-      "Why can't you give Elsa a balloon? Because she'll let it go.",
-      "I don't trust stairs. They're always up to something.",
-      "What do you call a bear with no teeth? A gummy bear.",
-      "Why did the coffee file a police report? It got mugged.",
-      "What's brown and sticky? A stick.",
-      "I made a pencil with two erasers. It was pointless."
-    ];
+<script>
+  const jokes = [
+    "I'm afraid for the calendar. Its days are numbered.",
+    "Why did the scarecrow win an award? Because he was outstanding in his field.",
+    "I only know 25 letters of the alphabet. I don't know y.",
+    "What do you call a fake noodle? An impasta.",
+    "How do you organize a space party? You planet.",
+    "Why don't skeletons fight each other? They don't have the guts.",
+    "I used to hate facial hair, but then it grew on me.",
+    "What do you call cheese that isn't yours? Nacho cheese.",
+    "Why did the bicycle fall over? Because it was two-tired.",
+    "I would tell you a chemistry joke, but I know I wouldn't get a reaction.",
+    "What do you call a factory that makes okay products? A satisfactory.",
+    "Why don't eggs tell jokes? They'd crack each other up.",
+    "I'm reading a book about anti-gravity. It's impossible to put down.",
+    "What did the ocean say to the beach? Nothing, it just waved.",
+    "Why can't your nose be 12 inches long? Because then it would be a foot.",
+    "I don't trust stairs. They're always up to something.",
+    "What do you call a bear with no teeth? A gummy bear.",
+    "Did you hear about the restaurant on the moon? Great food, no atmosphere.",
+    "I made a pencil with two erasers. It was pointless.",
+    "Why did the coffee file a police report? It got mugged.",
+    "How does a penguin build its house? Igloos it together.",
+    "What's brown and sticky? A stick.",
+    "Why did the golfer bring two pairs of pants? In case he got a hole in one.",
+    "I used to be a banker, but I lost interest.",
+    "What do you call a dinosaur that crashes his car? Tyrannosaurus wrecks.",
+    "Why don't scientists trust atoms? Because they make up everything.",
+    "I'm on a seafood diet. I see food and I eat it.",
+    "What did one wall say to the other wall? I'll meet you at the corner.",
+    "How do you make a tissue dance? You put a little boogie in it.",
+    "Why did the tomato turn red? Because it saw the salad dressing.",
+    "What do you call an alligator in a vest? An investigator.",
+    "I tried to catch fog yesterday. Mist.",
+    "Why was the math book sad? Because it had too many problems.",
+    "What do you call a belt made of watches? A waist of time.",
+    "Why can't you give Elsa a balloon? Because she'll let it go.",
+    "I ordered a chicken and an egg online. I'll let you know.",
+    "What do you call a pile of cats? A meowtain.",
+    "Why did the stadium get hot after the game? All the fans left.",
+    "How do you catch a squirrel? Climb a tree and act like a nut.",
+    "What did the grape do when it got stepped on? Nothing, it just let out a little wine.",
+    "Why do bees have sticky hair? Because they use honeycombs.",
+    "I bought some shoes from a drug dealer. I don't know what he laced them with, but I've been tripping all day."
+  ];
 
-    const btn = document.getElementById('jokeBtn');
-    const box = document.getElementById('jokeBox');
-    let last = -1;
+  const jokeEl = document.getElementById('joke');
+  const getBtn = document.getElementById('getBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const toast = document.getElementById('toast');
+  let lastIndex = -1;
+  let toastTimer;
 
-    function randomFallback() {
-      let i;
-      do { i = Math.floor(Math.random() * FALLBACK_JOKES.length); }
-      while (i === last && FALLBACK_JOKES.length > 1);
-      last = i;
-      return FALLBACK_JOKES[i];
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 1500);
+  }
+
+  function getJoke() {
+    let idx;
+    do {
+      idx = Math.floor(Math.random() * jokes.length);
+    } while (idx === lastIndex && jokes.length > 1);
+    lastIndex = idx;
+
+    jokeEl.classList.add('fade');
+    setTimeout(() => {
+      jokeEl.textContent = jokes[idx];
+      jokeEl.classList.remove('fade');
+    }, 350);
+  }
+
+  getBtn.addEventListener('click', getJoke);
+
+  copyBtn.addEventListener('click', () => {
+    const text = jokeEl.textContent;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        () => showToast('Copied! 📋'),
+        () => showToast('Copy failed')
+      );
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); showToast('Copied! 📋'); }
+      catch (e) { showToast('Copy failed'); }
+      document.body.removeChild(ta);
     }
-
-    function showJoke(text) {
-      box.classList.remove('fade-in');
-      // force reflow to restart animation
-      void box.offsetWidth;
-      box.textContent = text;
-      box.classList.add('fade-in');
-    }
-
-    async function getJoke() {
-      btn.disabled = true;
-      try {
-        const res = await fetch('https://icanhazdadjoke.com/', {
-          headers: { 'Accept': 'application/json' }
-        });
-        if (!res.ok) throw new Error('bad response');
-        const data = await res.json();
-        showJoke(data.joke || randomFallback());
-      } catch (e) {
-        // Offline / opened as file:// — use the local stash of jokes.
-        showJoke(randomFallback());
-      } finally {
-        btn.disabled = false;
-      }
-    }
-
-    btn.addEventListener('click', getJoke);
-  </script>
+  });
+</script>
 </body>
 </html>

@@ -1,34 +1,27 @@
-# 😄 Dad Joke Generator
+# Dad Joke Generator 👨
 
-A one-file, zero-dependency web prototype to test one question:
-**will anyone bother clicking the button more than once?**
+A zero-dependency, single-page dad joke machine. Click a button, get a groan.
 
 ## What was built
+A single static `index.html` (embedded CSS + vanilla JavaScript) containing a
+hardcoded array of 42 dad jokes. A large centered card displays the current joke.
 
-A single static `index.html` with:
-- A large, centered **"Tell me a joke"** button.
-- A display area below it that shows a random dad joke with a **fade-in animation** on every click.
-- A live fetch from the free [icanhazdadjoke.com](https://icanhazdadjoke.com) API, with an automatic
-  **fallback to 20 hardcoded jokes** if you're offline or opened the file directly (`file://`).
+**Core interaction:**
+- **Get Joke** — randomly picks a new joke (never repeats the same one twice in a
+  row) and fades it into the card with a smooth transition.
+- **Copy Joke** — copies the current joke to your clipboard with a confirmation toast.
 
-No backend, no build step, no persistence — just vanilla HTML/CSS/JS.
+The page is mobile-responsive and loads instantly with no external requests.
 
-## How to run it
-
-Just open the file — no server needed:
+## How to run
+Just open the file — no server, no build step, no dependencies.
 
 ```
-open index.html
+open index.html      # macOS
+# or double-click index.html in your file browser
 ```
-
-(Or double-click `index.html` in your file browser.)
-
-To deploy: drop the folder onto any static host (GitHub Pages, Netlify, etc.).
-The included `.nojekyll` file keeps GitHub Pages from mangling it.
 
 ## First 30 seconds
-
 1. Open `index.html`.
-2. Click **"Tell me a joke"** — a joke fades in.
-3. Click it again. And again. That repeat click is the whole point:
-   if you keep tapping for one more groan, the idea has legs.
+2. Tap **Get Joke** a few times — watch each joke fade in with no lag or repeats.
+3. Hit **Copy Joke** to grab your favorite and paste it to a friend.
