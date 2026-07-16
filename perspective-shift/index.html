@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Devil's Advocate — Debate Your Beliefs</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --border:#2a3140;
+    --accent:#ff5a5f; --accent2:#ffb347; --text:#e6edf3; --muted:#8b98a9;
+    --user:#1f6feb; --ai:#22262e;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(1200px 600px at 50% -10%,#1a2130 0%,var(--bg) 60%);
+    color:var(--text); min-height:100vh; display:flex; flex-direction:column; align-items:center;
+  }
+  header{width:100%;max-width:780px;padding:28px 20px 8px;text-align:center}
+  h1{margin:0;font-size:26px;letter-spacing:.3px}
+  h1 .flame{color:var(--accent)}
+  .sub{color:var(--muted);font-size:14px;margin-top:6px}
+  .wrap{width:100%;max-width:780px;padding:0 20px 40px;flex:1;display:flex;flex-direction:column}
+  .counter{color:var(--muted);font-size:12px;text-align:right;margin:10px 2px 0}
+  .thread{flex:1;display:flex;flex-direction:column;gap:14px;margin-top:8px}
+  .msg{display:flex;gap:10px;max-width:88%;animation:rise .25s ease}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .msg .bubble{padding:12px 15px;border-radius:14px;line-height:1.5;font-size:15px;white-space:pre-wrap}
+  .msg.user{align-self:flex-end;flex-direction:row-reverse}
+  .msg.user .bubble{background:var(--user);border-bottom-right-radius:4px}
+  .msg.ai .bubble{background:var(--ai);border:1px solid var(--border);border-bottom-left-radius:4px}
+  .avatar{width:34px;height:34px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:18px}
+  .msg.ai .avatar{background:linear-gradient(135deg,var(--accent),var(--accent2))}
+  .msg.user .avatar{background:var(--user)}
+  .bubble ul{margin:6px 0 0;padding-left:18px}
+  .bubble li{margin:4px 0}
+  .bubble .lead{font-weight:600;color:var(--accent2)}
+  .inputbar{display:flex;gap:10px;margin-top:16px;position:sticky;bottom:14px}
+  textarea{
+    flex:1;resize:none;background:var(--panel);border:1px solid var(--border);color:var(--text);
+    border-radius:12px;padding:13px 15px;font-size:15px;font-family:inherit;min-height:52px;max-height:140px;
+  }
+  textarea:focus{outline:none;border-color:var(--accent)}
+  button.send{
+    background:var(--accent);color:#fff;border:none;border-radius:12px;padding:0 22px;font-size:15px;
+    font-weight:600;cursor:pointer;transition:.15s;
+  }
+  button.send:hover{filter:brightness(1.08)}
+  button.send:disabled{opacity:.4;cursor:not-allowed}
+  .label{font-size:13px;color:var(--muted);margin:0 2px 6px}
+  /* summary card */
+  .card{
+    background:linear-gradient(160deg,var(--panel2),var(--panel));border:1px solid var(--accent);
+    border-radius:16px;padding:20px 22px;margin-top:18px;animation:rise .3s ease;
+  }
+  .card h3{margin:0 0 4px;font-size:17px}
+  .card .tag{color:var(--accent2);font-size:12px;letter-spacing:1px;text-transform:uppercase}
+  .card section{margin-top:14px}
+  .card section h4{margin:0 0 6px;font-size:14px;color:var(--accent)}
+  .card ul{margin:0;padding-left:18px} .card li{margin:5px 0;font-size:14px;line-height:1.45}
+  .card .fix{background:rgba(255,179,71,.12);border-left:3px solid var(--accent2);padding:10px 12px;border-radius:8px}
+  .restart{display:block;margin:20px auto 0;background:transparent;color:var(--muted);border:1px solid var(--border);
+    border-radius:10px;padding:9px 16px;cursor:pointer;font-size:14px}
+  .restart:hover{color:var(--text);border-color:var(--muted)}
+  .typing span{display:inline-block;width:6px;height:6px;margin:0 1px;background:var(--muted);border-radius:50%;animation:blink 1.2s infinite}
+  .typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,60%,100%{opacity:.25}30%{opacity:1}}
+</style>
+</head>
+<body>
+  <header>
+    <h1><span class="flame">🔥</span> Devil's Advocate</h1>
+    <div class="sub">State a belief. Defend it. The AI will push back — hard.</div>
+  </header>
+
+  <div class="wrap">
+    <div class="label" id="prompt-label">What do you believe?</div>
+    <div class="thread" id="thread"></div>
+    <div class="counter" id="counter"></div>
+
+    <div class="inputbar" id="inputbar">
+      <textarea id="input" placeholder="e.g. Remote work is better than working in an office." rows="1"></textarea>
+      <button class="send" id="send">Challenge</button>
+    </div>
+    <button class="restart" id="restart" style="display:none">↺ Start a new debate</button>
+  </div>
+
+<script>
+/* =========================================================================
+   Devil's Advocate — MVP prototype
+   All "LLM" responses are MOCKED locally (no network, no backend, no keys).
+   The mock plays the role of a rigorous devil's-advocate debater:
+     - 2-3 concise counter-points, no hedging or agreement
+   After 6 total exchanges it plays the "critique" role and emits a summary card.
+   ========================================================================= */
+
+const MAX_EXCHANGES = 6;          // total user turns
+let exchanges = 0;                // count of user messages sent
+let busy = false;
+const transcript = [];            // {role:'user'|'ai', text}
+
+const thread   = document.getElementById('thread');
+const input    = document.getElementById('input');
+const sendBtn  = document.getElementById('send');
+const counter  = document.getElementById('counter');
+const inputbar = document.getElementById('inputbar');
+const restart  = document.getElementById('restart');
+const label    = document.getElementById('prompt-label');
+
+/* ---------- keyword extraction for slightly-tailored mock replies ------- */
+const STOP = new Set(("the a an and or but if then is are was were be been being to of in on for with that this it as i we you they he she " +
+  "my our your their believe think that's should would could will can do does than better best more most very really just").split(" "));
+function keywords(text){
+  return text.toLowerCase().replace(/[^a-z0-9\s]/g," ").split(/\s+/)
+    .filter(w=>w.length>3 && !STOP.has(w));
+}
+function topPhrase(text){
+  const k = keywords(text);
+  return k.length ? k.slice(0,3).join(" ") : "your claim";
+}
+
+/* ---------- mock devil's-advocate counterargument generator ------------- */
+const OPENERS = [
+  "That position collapses under scrutiny. Consider:",
+  "I reject that outright. Here is why:",
+  "Convenient, but unconvincing. Three problems:",
+  "You've assumed the conclusion. Push back on this:",
+  "That's the comfortable answer, not the correct one:"
+];
+const ANGLES = [
+  t => `You treat "${t}" as self-evident, yet you offer no mechanism — correlation is doing all the work your causation claim needs to do.`,
+  t => `Whoever benefits most from "${t}" being true is exactly who has shaped the evidence you're relying on. That's motivated reasoning, not proof.`,
+  t => `Your view ignores the counterfactual: cases where the opposite of "${t}" held and outcomes were identical or better.`,
+  t => `You've smuggled in a hidden premise — that "${t}" scales. It rarely survives contact with edge cases, incentives, or the long run.`,
+  t => `"${t}" may be true today, but you're projecting a snapshot onto a moving target; the trend, not the state, is what matters.`,
+  t => `You conflate what you want with what is. Strip out the preference and the factual core of "${t}" is far thinner than you imply.`,
+  t => `The strongest version of the opposing side would concede your minor points and still win on the one you keep avoiding.`,
+  t => `Your argument proves too much: apply the same logic consistently and it forces conclusions you would clearly reject.`
+];
+function mockCounter(userText){
+  const t = topPhrase(userText);
+  const opener = OPENERS[Math.floor(Math.random()*OPENERS.length)];
+  // pick 2-3 distinct angles
+  const pool = [...ANGLES];
+  const picks = [];
+  const n = 2 + Math.floor(Math.random()*2); // 2 or 3
+  for(let i=0;i<n && pool.length;i++){
+    picks.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0](t));
+  }
+  const items = picks.map(p=>`<li>${p}</li>`).join("");
+  return `<span class="lead">${opener}</span><ul>${items}</ul>`;
+}
+
+/* ---------- mock final critique (summary card) -------------------------- */
+function mockCritique(){
+  const userTurns = transcript.filter(m=>m.role==='user').map(m=>m.text);
+  const belief = topPhrase(userTurns[0]||"your position");
+  const weak = [
+    `You leaned on assertion over evidence when defending "${belief}" — restated the claim rather than grounding it.`,
+    `Several rebuttals were met with new claims instead of addressing the specific objection raised.`,
+    `Emotional appeal did some of the load-bearing work; the factual scaffolding stayed thin.`
+  ];
+  const unaddressed = [
+    `The counterfactual case — where the opposite held and outcomes were fine — was never answered.`,
+    `The "who benefits / motivated evidence" objection went unrebutted.`,
+    `The scaling / edge-case problem was sidestepped.`
+  ];
+  const fix = `Pick your single strongest piece of concrete evidence for "${belief}" and lead with it. Concede one honest limitation up front — it disarms the "you ignore trade-offs" attack and makes the rest of your case land harder.`;
+  return `
+    <div class="tag">Debate complete · critique</div>
+    <h3>How your argument held up</h3>
+    <section>
+      <h4>⚠ Weak points</h4>
+      <ul>${weak.slice(0, 2+Math.floor(Math.random()*2)).map(x=>`<li>${x}</li>`).join("")}</ul>
+    </section>
+    <section>
+      <h4>❓ Unaddressed counterpoints</h4>
+      <ul>${unaddressed.slice(0, 2).map(x=>`<li>${x}</li>`).join("")}</ul>
+    </section>
+    <section class="fix">
+      <h4>💪 One way to strengthen your position</h4>
+      <div>${fix}</div>
+    </section>`;
+}
+
+/* ---------- rendering + streaming --------------------------------------- */
+function addMsg(role, html){
+  const msg = document.createElement('div');
+  msg.className = 'msg ' + role;
+  msg.innerHTML = `<div class="avatar">${role==='user'?'🧠':'😈'}</div><div class="bubble">${html}</div>`;
+  thread.appendChild(msg);
+  msg.scrollIntoView({behavior:'smooth',block:'end'});
+  return msg.querySelector('.bubble');
+}
+
+function typingBubble(){
+  return addMsg('ai', `<div class="typing"><span></span><span></span><span></span></div>`);
+}
+
+// stream html into a bubble character-by-character (renders as it goes)
+function streamInto(bubble, html){
+  return new Promise(resolve=>{
+    bubble.innerHTML = "";
+    let i = 0;
+    (function step(){
+      // advance a few chars per tick; skip over tags in one jump
+      let chunk = 4;
+      while(chunk-- > 0 && i < html.length){
+        if(html[i] === '<'){ const close = html.indexOf('>', i); i = close+1; }
+        else i++;
+      }
+      bubble.innerHTML = html.slice(0, i);
+      bubble.scrollIntoView({behavior:'smooth',block:'end'});
+      if(i < html.length) setTimeout(step, 12);
+      else resolve();
+    })();
+  });
+}
+
+function updateCounter(){
+  if(exchanges === 0){ counter.textContent = ""; return; }
+  counter.textContent = `Exchange ${Math.min(exchanges,MAX_EXCHANGES)} / ${MAX_EXCHANGES}`;
+}
+
+/* ---------- main submit flow -------------------------------------------- */
+async function submit(){
+  const text = input.value.trim();
+  if(!text || busy || exchanges >= MAX_EXCHANGES) return;
+
+  busy = true; sendBtn.disabled = true;
+  addMsg('user', escapeHtml(text));
+  transcript.push({role:'user', text});
+  input.value = ""; autoGrow();
+  exchanges++;
+  updateCounter();
+
+  // "call the LLM" (mocked) with typing indicator + streaming
+  const bubble = typingBubble();
+  await wait(500 + Math.random()*500);
+  const reply = mockCounter(text);
+  await streamInto(bubble, reply);
+  transcript.push({role:'ai', text:reply});
+
+  if(exchanges >= MAX_EXCHANGES){
+    await wait(400);
+    await showCritique();
+  }
+
+  busy = false;
+  sendBtn.disabled = exchanges >= MAX_EXCHANGES;
+  input.focus();
+}
+
+async function showCritique(){
+  label.textContent = "The debate has ended.";
+  const typing = typingBubble();
+  await wait(700);
+  typing.closest('.msg').remove();
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = mockCritique();
+  thread.appendChild(card);
+  card.scrollIntoView({behavior:'smooth',block:'end'});
+  inputbar.style.display = 'none';
+  restart.style.display = 'block';
+  counter.textContent = "Debate complete";
+}
+
+/* ---------- helpers ----------------------------------------------------- */
+function wait(ms){return new Promise(r=>setTimeout(r,ms));}
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function autoGrow(){input.style.height='auto';input.style.height=Math.min(input.scrollHeight,140)+'px';}
+
+sendBtn.addEventListener('click', submit);
+input.addEventListener('input', autoGrow);
+input.addEventListener('keydown', e=>{
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); submit(); }
+});
+restart.addEventListener('click', ()=>location.reload());
+input.focus();
+</script>
+</body>
+</html>
