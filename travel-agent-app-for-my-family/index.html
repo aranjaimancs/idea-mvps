@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Family Trip Planner</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🧳</span>
+      <div>
+        <h1>Family Trip Planner</h1>
+        <p class="tagline">Relaxed, comfortable itineraries — tuned to how your family likes to travel.</p>
+      </div>
+    </div>
+    <div class="trip-id" title="Everyone in the family shares this trip">
+      Trip&nbsp;ID: <code id="tripId">family-trip</code>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============ PLAN A TRIP ============ -->
+    <section class="panel">
+      <h2 class="section-title">📝 Plan a Trip</h2>
+      <form id="planForm" class="plan-form" autocomplete="off">
+        <div class="field">
+          <label for="destinations">Destination(s)</label>
+          <input id="destinations" name="destinations" type="text"
+                 placeholder="e.g. Munich, Germany" value="Munich &amp; Bavaria, Germany" />
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="startDate">Start date</label>
+            <input id="startDate" name="startDate" type="date" />
+          </div>
+          <div class="field">
+            <label for="endDate">End date</label>
+            <input id="endDate" name="endDate" type="date" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="notes">Notes / requests <span class="muted">(free text)</span></label>
+          <textarea id="notes" name="notes" rows="2"
+            placeholder="Anything special? e.g. we love beer gardens, want one castle day"></textarea>
+        </div>
+
+        <div class="profile-card">
+          <div class="profile-title">👨‍👩‍👧 Family preference profile <span class="pill">applied automatically</span></div>
+          <ul>
+            <li>Relaxed pace — no over-scheduling</li>
+            <li>Nicer, quieter hotels</li>
+            <li>Avoid long walks (mom has back pain)</li>
+            <li>Loves seeing the major landmarks</li>
+          </ul>
+        </div>
+
+        <button type="submit" class="primary" id="generateBtn">✨ Generate Itinerary</button>
+      </form>
+    </section>
+
+    <!-- ============ ITINERARY ============ -->
+    <section class="panel">
+      <div class="itinerary-head">
+        <h2 class="section-title">🗺️ Your Itinerary</h2>
+        <span id="itineraryMeta" class="muted"></span>
+      </div>
+      <div id="itinerary" class="itinerary">
+        <div class="empty-state">Fill in the form above and hit <strong>Generate Itinerary</strong> to see a day-by-day plan.</div>
+      </div>
+    </section>
+
+    <!-- ============ TRIP ASSISTANT CHAT ============ -->
+    <section class="panel">
+      <h2 class="section-title">💬 Trip Assistant</h2>
+      <p class="muted small">Ask anything about your trip — it knows your itinerary. Try “do we need cash in Germany?”</p>
+      <div id="chat" class="chat"></div>
+      <div class="suggestions" id="suggestions">
+        <button type="button" class="chip">Do we need cash in Germany?</button>
+        <button type="button" class="chip">How do you say hello in German?</button>
+        <button type="button" class="chip">What should mom wear for her back?</button>
+      </div>
+      <form id="chatForm" class="chat-form">
+        <input id="chatInput" type="text" placeholder="Ask the assistant…" autocomplete="off" />
+        <button type="submit" class="primary" id="sendBtn">Send</button>
+      </form>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>Prototype • responses are mocked locally • shared via Trip ID (saved in this browser)</span>
+    <button id="resetBtn" class="link-btn">Reset trip data</button>
+  </footer>
+
+  <script src="mockApi.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
