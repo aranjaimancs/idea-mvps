@@ -1,145 +1,275 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tell Me a Joke 😄</title>
-  <style>
-    :root {
-      --bg1: #667eea;
-      --bg2: #764ba2;
-      --accent: #ffd93d;
-    }
-    * { box-sizing: border-box; }
-    html, body { height: 100%; margin: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: linear-gradient(135deg, var(--bg1), var(--bg2));
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-    .card {
-      width: 100%;
-      max-width: 560px;
-      text-align: center;
-    }
-    h1 {
-      font-size: clamp(1.6rem, 4vw, 2.4rem);
-      margin: 0 0 6px;
-    }
-    .subtitle {
-      margin: 0 0 28px;
-      opacity: 0.85;
-      font-size: 0.95rem;
-    }
-    button {
-      background: var(--accent);
-      color: #333;
-      border: none;
-      border-radius: 999px;
-      padding: 16px 34px;
-      font-size: 1.15rem;
-      font-weight: 700;
-      cursor: pointer;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-      transition: transform 0.12s ease, box-shadow 0.12s ease;
-    }
-    button:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(0,0,0,0.28); }
-    button:active { transform: translateY(1px) scale(0.98); }
-    .joke-box {
-      margin-top: 30px;
-      width: 100%;
-      min-height: 140px;
-      border: none;
-      border-radius: 16px;
-      background: rgba(255,255,255,0.14);
-      backdrop-filter: blur(4px);
-      color: #fff;
-      font-size: 1.2rem;
-      line-height: 1.5;
-      padding: 24px;
-      resize: none;
-      text-align: center;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    /* fade-in animation */
-    .fade {
-      animation: fadeIn 0.6s ease forwards;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .count {
-      margin-top: 16px;
-      font-size: 0.85rem;
-      opacity: 0.75;
-      min-height: 1.2em;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dad Joke Generator</title>
+<style>
+  :root {
+    --bg1: #6a11cb;
+    --bg2: #2575fc;
+    --card: #ffffff;
+    --text: #1c1c2b;
+    --accent: #2575fc;
+    --accent-hover: #1b5fd0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(135deg, var(--bg1), var(--bg2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: var(--text);
+    min-height: 100vh;
+  }
+  .wrap {
+    width: 100%;
+    max-width: 560px;
+    text-align: center;
+  }
+  h1 {
+    color: #fff;
+    font-size: 2rem;
+    margin-bottom: 6px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .subtitle {
+    color: rgba(255,255,255,0.85);
+    margin-bottom: 24px;
+    font-size: 0.95rem;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 40px 30px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .joke {
+    font-size: 1.4rem;
+    line-height: 1.5;
+    opacity: 1;
+    transition: opacity 0.35s ease;
+  }
+  .joke.fade { opacity: 0; }
+  .buttons {
+    margin-top: 26px;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  button {
+    border: none;
+    border-radius: 50px;
+    padding: 14px 28px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s ease, background 0.2s ease;
+    color: #fff;
+  }
+  button:active { transform: scale(0.96); }
+  .btn-primary { background: var(--accent); }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-copy {
+    background: rgba(255,255,255,0.25);
+    border: 2px solid rgba(255,255,255,0.6);
+  }
+  .btn-copy:hover { background: rgba(255,255,255,0.4); }
+  .toast {
+    margin-top: 16px;
+    color: #fff;
+    font-size: 0.9rem;
+    height: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .toast.show { opacity: 1; }
+  @media (max-width: 480px) {
+    h1 { font-size: 1.5rem; }
+    .joke { font-size: 1.15rem; }
+    .card { padding: 30px 20px; }
+    button { flex: 1 1 auto; }
+  }
+</style>
 </head>
 <body>
-  <main class="card">
-    <h1>Need a laugh? 😄</h1>
-    <p class="subtitle">Hit the button. Keep hitting it. We dare you not to smile.</p>
-    <button id="tellBtn">Tell me a joke</button>
-    <div id="jokeBox" class="joke-box">Your joke will appear here…</div>
-    <p id="count" class="count"></p>
-  </main>
+  <div class="wrap">
+    <h1>Dad Joke Generator</h1>
+    <p class="subtitle">Groan-worthy jokes on demand 👨</p>
+    <div class="card">
+      <p class="joke" id="joke">Click the button for your first dad joke!</p>
+    </div>
+    <div class="buttons">
+      <button class="btn-primary" id="getBtn">Tell me a joke</button>
+      <button class="btn-copy" id="copyBtn">Copy joke</button>
+    </div>
+    <div class="toast" id="toast"></div>
+  </div>
 
-  <script>
-    const jokes = [
-      "Why don't skeletons fight each other? They don't have the guts.",
-      "I'm reading a book about anti-gravity. It's impossible to put down.",
-      "Why did the scarecrow win an award? He was outstanding in his field.",
-      "I would tell you a chemistry joke, but I know I wouldn't get a reaction.",
-      "Why don't scientists trust atoms? Because they make up everything.",
-      "I told my wife she was drawing her eyebrows too high. She looked surprised.",
-      "Why did the bicycle fall over? Because it was two-tired.",
-      "What do you call fake spaghetti? An impasta.",
-      "I used to play piano by ear, but now I use my hands.",
-      "Why can't your nose be 12 inches long? Because then it would be a foot.",
-      "I only know 25 letters of the alphabet. I don't know y.",
-      "What do you call cheese that isn't yours? Nacho cheese.",
-      "Why did the coffee file a police report? It got mugged.",
-      "How do you organize a space party? You planet.",
-      "I'm on a seafood diet. I see food and I eat it.",
-      "Why did the math book look sad? It had too many problems.",
-      "What do you call a fish wearing a bowtie? Sofishticated.",
-      "Why don't eggs tell jokes? They'd crack each other up.",
-      "I invented a new word: Plagiarism.",
-      "Did you hear about the restaurant on the moon? Great food, no atmosphere."
-    ];
+<script>
+  const jokes = [
+    "I'm afraid for the calendar. Its days are numbered.",
+    "Why did the scarecrow win an award? Because he was outstanding in his field.",
+    "I only know 25 letters of the alphabet. I don't know y.",
+    "What do you call a fake noodle? An impasta.",
+    "How do you organize a space party? You planet.",
+    "Why don't skeletons fight each other? They don't have the guts.",
+    "I used to hate facial hair, but then it grew on me.",
+    "What do you call cheese that isn't yours? Nacho cheese.",
+    "Why did the bicycle fall over? Because it was two-tired.",
+    "I would tell you a chemistry joke, but I know I wouldn't get a reaction.",
+    "What do you call a factory that makes okay products? A satisfactory.",
+    "Why don't eggs tell jokes? They'd crack each other up.",
+    "I'm reading a book about anti-gravity. It's impossible to put down.",
+    "What did the ocean say to the beach? Nothing, it just waved.",
+    "Why can't your nose be 12 inches long? Because then it would be a foot.",
+    "I don't trust stairs. They're always up to something.",
+    "What do you call a bear with no teeth? A gummy bear.",
+    "Did you hear about the restaurant on the moon? Great food, no atmosphere.",
+    "I made a pencil with two erasers. It was pointless.",
+    "Why did the coffee file a police report? It got mugged.",
+    "How does a penguin build its house? Igloos it together.",
+    "What's brown and sticky? A stick.",
+    "Why did the golfer bring two pairs of pants? In case he got a hole in one.",
+    "I used to be a banker, but I lost interest.",
+    "What do you call a dinosaur that crashes his car? Tyrannosaurus wrecks.",
+    "Why don't scientists trust atoms? Because they make up everything.",
+    "I'm on a seafood diet. I see food and I eat it.",
+    "What did one wall say to the other wall? I'll meet you at the corner.",
+    "How do you make a tissue dance? You put a little boogie in it.",
+    "Why did the tomato turn red? Because it saw the salad dressing.",
+    "What do you call an alligator in a vest? An investigator.",
+    "I tried to catch fog yesterday. Mist.",
+    "Why was the math book sad? Because it had too many problems.",
+    "What do you call a belt made of watches? A waist of time.",
+    "Why can't you give Elsa a balloon? Because she'll let it go.",
+    "I ordered a chicken and an egg online. I'll let you know.",
+    "What do you call a pile of cats? A meowtain.",
+    "Why did the stadium get hot after the game? All the fans left.",
+    "How do you catch a squirrel? Climb a tree and act like a nut.",
+    "What did the grape do when it got stepped on? Nothing, it just let out a little wine.",
+    "Why do bees have sticky hair? Because they use honeycombs.",
+    "I bought some shoes from a drug dealer. I don't know what he laced them with, but I've been tripping all day.",
+    "Why did the invisible man turn down the job offer? He couldn't see himself doing it.",
+    "What do you call a boomerang that won't come back? A stick.",
+    "Why do seagulls fly over the sea? Because if they flew over the bay, they'd be bagels.",
+    "How do you fix a broken pumpkin? With a pumpkin patch.",
+    "What did the buffalo say when his son left for college? Bison.",
+    "Why don't oysters donate to charity? Because they're shellfish.",
+    "What did the janitor say when he jumped out of the closet? Supplies!",
+    "How much does a hipster weigh? An instagram.",
+    "Why did the man put his money in the freezer? He wanted cold hard cash.",
+    "What do you call a cow with no legs? Ground beef.",
+    "Why can't a leopard hide? Because he's always spotted.",
+    "What do you call a fish with no eyes? A fsh.",
+    "How do you make holy water? You boil the hell out of it.",
+    "Why did the picture go to jail? Because it was framed.",
+    "What do you call a sleeping bull? A bulldozer.",
+    "What kind of music do mummies listen to? Wrap music.",
+    "Why did the cookie go to the doctor? Because it was feeling crummy.",
+    "What do you call a dog that can do magic? A labracadabrador.",
+    "Why was the broom late? It over-swept.",
+    "How do trees get on the internet? They log in.",
+    "Why did the melon jump into the lake? It wanted to be a watermelon.",
+    "What do you call a lazy kangaroo? A pouch potato.",
+    "Why did the man run around his bed? To catch up on his sleep.",
+    "What do you get when you cross a snowman and a vampire? Frostbite.",
+    "Why can't you trust an atom? Because they make up literally everything.",
+    "What did the zero say to the eight? Nice belt.",
+    "Why did the banana go to the doctor? Because it wasn't peeling well.",
+    "What do you call a dinosaur with an extensive vocabulary? A thesaurus.",
+    "Why did the scarecrow become a successful motivational speaker? He was outstanding in his field.",
+    "What do you call a cow during an earthquake? A milkshake.",
+    "Why don't crabs give to charity? Because they're shellfish.",
+    "What's orange and sounds like a parrot? A carrot.",
+    "Why did the golfer wear two pairs of pants? In case he got a hole in one.",
+    "What do you call an elephant that doesn't matter? An irrelephant.",
+    "Why did the frog take the bus to work? His car got toad away.",
+    "What do you call a magician who lost his magic? Ian.",
+    "Why are ghosts such bad liars? Because you can see right through them.",
+    "What do you call a pig that does karate? A pork chop.",
+    "Why did the tomato blush? Because it saw the salad dressing.",
+    "What do you get from a pampered cow? Spoiled milk.",
+    "Why did the student eat his homework? Because the teacher said it was a piece of cake.",
+    "What do you call a cheese that isn't yours? Nacho cheese.",
+    "Why did the computer go to the doctor? It had a virus.",
+    "What do you call a train carrying bubble gum? A chew-chew train.",
+    "Why don't scientists trust stairs? They're always up to something.",
+    "What do you call a fake stone in Ireland? A sham rock.",
+    "Why was the belt arrested? For holding up a pair of pants.",
+    "What do you call a duck that gets all A's? A wise quacker.",
+    "Why did the coffee taste like mud? Because it was ground this morning.",
+    "What do you call a boat that's afraid of everything? A nervous wreck.",
+    "Why did the cyclops stop teaching? Because he only had one pupil.",
+    "What did the drummer name his twin daughters? Anna one, Anna two.",
+    "Why did the man fall down the well? Because he couldn't see that well.",
+    "What do you call a snowman with a six-pack? An abdominal snowman.",
+    "Why did the chicken join a band? Because it had the drumsticks.",
+    "What do you call an old snowman? Water.",
+    "Why don't ants get sick? Because they have little anty-bodies.",
+    "What did the left eye say to the right eye? Between us, something smells.",
+    "Why did the orange stop rolling down the hill? It ran out of juice.",
+    "What do you call a factory that sells passable products? A satisfactory.",
+    "Why was the calendar so popular? It had a lot of dates.",
+    "What do you call a rabbit with fleas? Bugs Bunny.",
+    "Why did the man name his dogs Rolex and Timex? Because they were watchdogs."
+  ];
 
-    const btn = document.getElementById('tellBtn');
-    const box = document.getElementById('jokeBox');
-    const count = document.getElementById('count');
-    let lastIndex = -1;
-    let clicks = 0;
+  const jokeEl = document.getElementById('joke');
+  const getBtn = document.getElementById('getBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const toast = document.getElementById('toast');
+  let lastIndex = -1;
+  let toastTimer;
 
-    function randomJoke() {
-      let i;
-      do {
-        i = Math.floor(Math.random() * jokes.length);
-      } while (i === lastIndex && jokes.length > 1);
-      lastIndex = i;
-      return jokes[i];
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 1500);
+  }
+
+  function getJoke() {
+    let idx;
+    do {
+      idx = Math.floor(Math.random() * jokes.length);
+    } while (idx === lastIndex && jokes.length > 1);
+    lastIndex = idx;
+
+    jokeEl.classList.add('fade');
+    setTimeout(() => {
+      jokeEl.textContent = jokes[idx];
+      jokeEl.classList.remove('fade');
+    }, 350);
+  }
+
+  getBtn.addEventListener('click', getJoke);
+
+  copyBtn.addEventListener('click', () => {
+    const text = jokeEl.textContent;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        () => showToast('Copied! 📋'),
+        () => showToast('Copy failed')
+      );
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); showToast('Copied! 📋'); }
+      catch (e) { showToast('Copy failed'); }
+      document.body.removeChild(ta);
     }
-
-    btn.addEventListener('click', () => {
-      clicks++;
-      box.textContent = randomJoke();
-      // restart the fade animation
-      box.classList.remove('fade');
-      void box.offsetWidth; // force reflow
-      box.classList.add('fade');
-      count.textContent = clicks === 1 ? "1 joke so far — keep going!" : clicks + " jokes and counting! 😂";
-    });
-  </script>
+  });
+</script>
 </body>
 </html>

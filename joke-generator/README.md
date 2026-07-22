@@ -1,34 +1,28 @@
-# Tell Me a Joke 😄
+# Dad Joke Generator 👨
 
-A dead-simple, single-page joke machine. One button, one text area, zero friction.
+A zero-dependency, single-page dad joke machine. Click a button, get a groan.
 
 ## What was built
+A single static `index.html` (embedded CSS + vanilla JavaScript) containing a
+hardcoded array of 105 dad jokes. A large centered card displays the current joke.
 
-A static `index.html` (vanilla HTML + CSS + JS, no dependencies) with:
-- A centered **"Tell me a joke"** button.
-- A text area below it that displays a random joke on each click.
-- A **fade-in animation** every time a new joke appears.
-- A little click counter to reinforce the "just one more" loop.
+**Core interaction:**
+- **Tell me a joke** — randomly picks a new joke (never repeats the same one twice in
+  a row) and fades it into the card with a smooth transition.
+- **Copy joke** — copies the current joke to your clipboard (Clipboard API) with a
+  confirmation toast.
 
-The core interaction: **click the button → get a random joke → click again**. It's built to test one question — *is repeated clicking fun enough that people share the page?*
+The page is mobile-responsive and loads instantly with no external requests.
 
-The jokes are hardcoded in a JavaScript array (~20 jokes). No backend, no database, no API calls, no accounts.
-
-## How to run it
-
-Just open the file in any browser:
+## How to run
+Just open the file — no server, no build step, no dependencies.
 
 ```
 open index.html      # macOS
-# or double-click index.html in your file explorer
+# or double-click index.html in your file browser
 ```
 
-No install, no build step, no local server required.
-
 ## First 30 seconds
-
 1. Open `index.html`.
-2. Click **"Tell me a joke"** and read the joke that fades in.
-3. Keep clicking — each click serves up a fresh, never-immediately-repeated joke and bumps the counter.
-
-If you find yourself clicking "just one more time," the concept is working.
+2. Tap **Tell me a joke** a few times — watch each joke fade in with no lag or repeats.
+3. Hit **Copy joke** to grab your favorite and paste it to a friend.
