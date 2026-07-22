@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SiteSpark — Automated Local Business Outreach</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e2230;
+    --border: #2a2f3d;
+    --text: #e6e9ef;
+    --muted: #8b93a7;
+    --accent: #6d8bff;
+    --accent-2: #4cd7a0;
+    --warn: #ffb454;
+    --danger: #ff6b6b;
+    --shadow: 0 8px 30px rgba(0,0,0,.35);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(1200px 600px at 10% -10%, #1a2036 0%, var(--bg) 55%);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 5;
+    backdrop-filter: blur(8px);
+    background: rgba(15,17,21,.7);
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center; font-weight: 800; color: #0b0e14;
+  }
+  .brand h1 { font-size: 16px; margin: 0; letter-spacing: .3px; }
+  .brand p { margin: 0; font-size: 12px; color: var(--muted); }
+  .kpis { display: flex; gap: 18px; }
+  .kpi { text-align: right; }
+  .kpi b { font-size: 18px; display: block; }
+  .kpi span { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1.1fr 1.3fr 1.1fr;
+    gap: 16px; padding: 16px 24px; align-items: start;
+  }
+  @media (max-width: 1100px){ .layout{ grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; box-shadow: var(--shadow); overflow: hidden;
+  }
+  .panel-head {
+    padding: 14px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .panel-head h2 { font-size: 13px; margin: 0; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); }
+  .panel-head .step { font-size: 11px; color: var(--accent); font-weight: 700; }
+  .panel-body { padding: 12px; }
+
+  /* Leads table */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  th { color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+  tr.selected td { background: var(--panel-2); }
+  .lead-name { font-weight: 600; }
+  .lead-sub { font-size: 11px; color: var(--muted); }
+  .status { font-size: 10px; padding: 3px 7px; border-radius: 20px; font-weight: 700; white-space: nowrap; }
+  .s-new { background: #2a2f3d; color: var(--muted); }
+  .s-preview { background: rgba(109,139,255,.15); color: var(--accent); }
+  .s-sent { background: rgba(76,215,160,.15); color: var(--accent-2); }
+  .s-opened { background: rgba(255,180,84,.15); color: var(--warn); }
+  .s-replied { background: rgba(76,215,160,.25); color: var(--accent-2); }
+
+  button {
+    font-family: inherit; cursor: pointer; border: none; border-radius: 8px;
+    font-weight: 600; transition: transform .05s ease, filter .15s ease;
+  }
+  button:active { transform: translateY(1px); }
+  .btn-sm { padding: 6px 10px; font-size: 12px; }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), #8aa2ff); color: #0b0e14; }
+  .btn-ghost { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+  .btn-send { background: linear-gradient(135deg, var(--accent-2), #7ff0c4); color: #062018; width: 100%; padding: 11px; font-size: 14px; margin-top: 10px; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-batch { background: linear-gradient(135deg, var(--warn), #ffcf87); color: #241600; }
+
+  /* Preview */
+  .preview-empty, .outreach-empty {
+    color: var(--muted); text-align: center; padding: 40px 20px; font-size: 13px;
+  }
+  .preview-frame-wrap {
+    border-radius: 10px; overflow: hidden; border: 1px solid var(--border);
+    background: #fff; position: relative;
+  }
+  .browser-bar {
+    background: #12141b; padding: 8px 10px; display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .url-pill {
+    flex: 1; background: #0b0e14; border: 1px solid var(--border); color: var(--accent);
+    font-size: 11px; padding: 4px 10px; border-radius: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  iframe { width: 100%; height: 420px; border: 0; display: block; background: #fff; }
+
+  .gen-log { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--accent-2); margin-top: 8px; min-height: 16px; }
+
+  /* Outreach */
+  .field { margin-bottom: 10px; }
+  .field label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px; }
+  .field input, .field textarea {
+    width: 100%; background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 9px 10px; font-family: inherit; font-size: 13px; resize: vertical;
+  }
+  .field textarea { min-height: 170px; line-height: 1.5; }
+  .link-chip {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 11px;
+    background: rgba(109,139,255,.12); color: var(--accent); padding: 5px 9px; border-radius: 6px; margin-top: 6px;
+  }
+  .tracker { margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 10px; }
+  .track-row { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 5px 0; color: var(--muted); }
+  .track-row.done { color: var(--text); }
+  .track-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
+  .track-row.done .track-dot { background: var(--accent-2); }
+  .track-time { margin-left: auto; font-size: 10px; color: var(--muted); }
+
+  .toast {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+    padding: 12px 18px; border-radius: 10px; font-size: 13px; box-shadow: var(--shadow);
+    opacity: 0; pointer-events: none; transition: all .25s ease; z-index: 50;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .demo-note { font-size: 10px; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">S</div>
+    <div>
+      <h1>SiteSpark</h1>
+      <p>Raw business name → live preview → personalized email, in minutes</p>
+    </div>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><b id="kpi-previews">0</b><span>Previews</span></div>
+    <div class="kpi"><b id="kpi-sent">0</b><span>Sent</span></div>
+    <div class="kpi"><b id="kpi-opened">0</b><span>Opened</span></div>
+    <div class="kpi"><b id="kpi-replied">0</b><span>Replied</span></div>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- PANEL 1: LEADS -->
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Leads</h2><span class="step">STEP 1 · 20 curated businesses</span>
+    </div>
+    <div class="panel-body">
+      <button id="batch-btn" class="btn-batch btn-sm" style="margin-bottom:10px;width:100%;padding:8px">⚡ Generate previews for first 5 leads</button>
+      <table>
+        <thead><tr><th>Business</th><th>Status</th><th></th></tr></thead>
+        <tbody id="leads-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PANEL 2: PREVIEW -->
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Site Preview</h2><span class="step">STEP 2 · LLM-generated + deployed</span>
+    </div>
+    <div class="panel-body">
+      <div id="preview-content">
+        <div class="preview-empty">Select a lead and click <b>Generate preview</b>.<br>A one-page site is generated and "deployed" to a unique URL.</div>
+      </div>
+      <div class="gen-log" id="gen-log"></div>
+    </div>
+  </section>
+
+  <!-- PANEL 3: OUTREACH -->
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Outreach</h2><span class="step">STEP 3 · Draft, send & track</span>
+    </div>
+    <div class="panel-body">
+      <div id="outreach-content">
+        <div class="outreach-empty">Generate a preview first — a cold email referencing the live link is auto-drafted here.</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ====== MOCKED DATA (would come from Supabase) ======
+const LEADS = [
+  { id:1,  name:"Bella's Trattoria",        industry:"Italian restaurant", city:"Portland, OR",  email:"maria@bellastrattoria.com" },
+  { id:2,  name:"Ridgeline Plumbing",       industry:"plumbing service",   city:"Denver, CO",    email:"info@ridgelineplumbing.com" },
+  { id:3,  name:"Willow & Fern Florist",    industry:"florist",            city:"Austin, TX",    email:"hello@willowandfern.com" },
+  { id:4,  name:"Iron Peak CrossFit",       industry:"fitness gym",        city:"Boise, ID",     email:"coach@ironpeakcf.com" },
+  { id:5,  name:"The Grind Coffee Bar",     industry:"coffee shop",        city:"Seattle, WA",   email:"team@grindcoffeebar.com" },
+  { id:6,  name:"Sunset Auto Detailing",    industry:"car detailing",      city:"Phoenix, AZ",   email:"book@sunsetdetail.com" },
+  { id:7,  name:"Paws & Claws Grooming",    industry:"pet grooming",       city:"Nashville, TN", email:"hi@pawsclaws.com" },
+  { id:8,  name:"Meridian Dental Care",     industry:"dental clinic",      city:"Columbus, OH",  email:"front@meridiandental.com" },
+  { id:9,  name:"Hometown Hardware",        industry:"hardware store",     city:"Madison, WI",   email:"sales@hometownhw.com" },
+  { id:10, name:"Luna Yoga Studio",         industry:"yoga studio",        city:"San Diego, CA", email:"om@lunayoga.com" },
+  { id:11, name:"Copper Kettle Bakery",     industry:"bakery",             city:"Portland, ME",  email:"orders@copperkettle.com" },
+  { id:12, name:"BrightSmile Orthodontics", industry:"orthodontist",       city:"Dallas, TX",    email:"office@brightsmileortho.com" },
+  { id:13, name:"Trailhead Bike Shop",      industry:"bicycle shop",       city:"Bend, OR",      email:"ride@trailheadbikes.com" },
+  { id:14, name:"Cascade Landscaping",      industry:"landscaping",        city:"Tacoma, WA",    email:"quotes@cascadeland.com" },
+  { id:15, name:"Nonna's Pizzeria",         industry:"pizzeria",           city:"Providence, RI",email:"nonna@nonnaspizza.com" },
+  { id:16, name:"Elevate Barber Co.",       industry:"barbershop",         city:"Atlanta, GA",   email:"cuts@elevatebarber.com" },
+  { id:17, name:"Blue Harbor Seafood",      industry:"seafood restaurant", city:"Portland, ME",  email:"catch@blueharbor.com" },
+  { id:18, name:"Precision Auto Repair",    industry:"auto repair",        city:"Kansas City, MO",email:"service@precisionauto.com" },
+  { id:19, name:"The Reading Room",         industry:"bookstore",          city:"Ann Arbor, MI", email:"books@readingroom.com" },
+  { id:20, name:"Verde Tacos",              industry:"taqueria",           city:"Los Angeles, CA",email:"hola@verdetacos.com" },
+];
+
+// palette themes per industry vibe
+const THEMES = [
+  { bg:"#2c3e50", accent:"#e67e22", light:"#ecf0f1" },
+  { bg:"#1a5276", accent:"#48c9b0", light:"#eaf6f6" },
+  { bg:"#6c3483", accent:"#f1948a", light:"#f4ecf7" },
+  { bg:"#0e6251", accent:"#f7dc6f", light:"#e8f8f5" },
+  { bg:"#7b241c", accent:"#f5b041", light:"#fdedec" },
+];
+
+const TAGLINES = {
+  "Italian restaurant":"Authentic Italian, made from scratch daily.",
+  "plumbing service":"Fast, reliable plumbing — 24/7 emergency service.",
+  "florist":"Fresh arrangements for every occasion.",
+  "fitness gym":"Stronger every day. Community-driven coaching.",
+  "coffee shop":"Small-batch roasts, poured with care.",
+  "car detailing":"Showroom shine, delivered to your driveway.",
+  "pet grooming":"Happy pets, wagging tails, expert care.",
+  "dental clinic":"Gentle, modern dentistry for the whole family.",
+  "hardware store":"Everything you need to get the job done.",
+  "yoga studio":"Find your balance. All levels welcome.",
+  "bakery":"Warm bread & pastries, baked fresh at dawn.",
+  "orthodontist":"Straighter smiles, brighter confidence.",
+  "bicycle shop":"Ride further. Expert fits & repairs.",
+  "landscaping":"Beautiful yards, year-round curb appeal.",
+  "pizzeria":"Wood-fired pizza the way Nonna made it.",
+  "barbershop":"Sharp cuts, classic service.",
+  "seafood restaurant":"Fresh off the boat, straight to your plate.",
+  "auto repair":"Honest repairs. Trusted by your neighbors.",
+  "bookstore":"Get lost in a good book.",
+  "taqueria":"Street-style tacos, bold fresh flavor.",
+};
+
+const state = {}; // id -> { status, previewUrl, siteHtml, email, tracking, theme }
+let activeId = null;
+
+const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+
+// ====== "LLM" SITE GENERATION (mocked, deterministic) ======
+function generateSiteHtml(lead, theme){
+  const tagline = TAGLINES[lead.industry] || "Quality you can count on.";
+  const cap = lead.industry.charAt(0).toUpperCase()+lead.industry.slice(1);
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:Georgia,'Times New Roman',serif}
+    body{color:#222}
+    .hero{background:linear-gradient(135deg,${theme.bg},${theme.accent});color:#fff;padding:70px 30px;text-align:center}
+    .hero h1{font-size:38px;letter-spacing:1px}
+    .hero p{font-size:17px;margin-top:12px;opacity:.92}
+    .cta{display:inline-block;margin-top:22px;background:#fff;color:${theme.bg};padding:12px 28px;border-radius:30px;font-weight:bold;text-decoration:none}
+    nav{background:${theme.bg};color:#fff;padding:14px 30px;display:flex;justify-content:space-between;align-items:center}
+    nav b{font-size:18px;letter-spacing:1px}
+    nav span{font-size:13px;opacity:.8}
+    .about{padding:50px 30px;max-width:760px;margin:0 auto;text-align:center;background:${theme.light}}
+    .about h2{color:${theme.bg};font-size:26px;margin-bottom:14px}
+    .about p{font-size:16px;line-height:1.7;color:#444}
+    .services{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;padding:20px 30px 50px;background:${theme.light}}
+    .card{background:#fff;border-radius:10px;padding:22px;width:190px;box-shadow:0 4px 14px rgba(0,0,0,.08);text-align:center}
+    .card h3{color:${theme.accent};font-size:16px;margin-bottom:8px}
+    .card p{font-size:13px;color:#666}
+    .contact{background:${theme.bg};color:#fff;padding:44px 30px;text-align:center}
+    .contact h2{font-size:24px;margin-bottom:14px}
+    .contact a{color:#fff}
+    footer{background:#111;color:#888;text-align:center;padding:16px;font-size:12px}
+  </style></head><body>
+    <nav><b>${lead.name}</b><span>${lead.city}</span></nav>
+    <div class="hero">
+      <h1>${lead.name}</h1>
+      <p>${tagline}</p>
+      <a class="cta" href="#contact">Book Now</a>
+    </div>
+    <div class="about">
+      <h2>Welcome</h2>
+      <p>At ${lead.name}, we're proud to be ${lead.city}'s trusted ${lead.industry}. For years our neighbors have counted on us for quality, care, and a personal touch you won't find anywhere else. Whether you're a first-timer or a regular, we treat you like family.</p>
+    </div>
+    <div class="services">
+      <div class="card"><h3>Trusted Local</h3><p>Serving ${lead.city} with pride and expertise.</p></div>
+      <div class="card"><h3>${cap}</h3><p>${tagline}</p></div>
+      <div class="card"><h3>Get In Touch</h3><p>Call, email, or drop by anytime.</p></div>
+    </div>
+    <div class="contact" id="contact">
+      <h2>Contact Us</h2>
+      <p>${lead.email} · ${lead.city}</p>
+      <p style="margin-top:8px;opacity:.8">Open Mon–Sat · Walk-ins welcome</p>
+    </div>
+    <footer>© 2026 ${lead.name} · Site by SiteSpark</footer>
+  </body></html>`;
+}
+
+// ====== "LLM" EMAIL DRAFT (mocked) ======
+function draftEmail(lead, url){
+  const firstName = lead.email.split('@')[0].replace(/[^a-z]/gi,'');
+  const greetName = firstName.charAt(0).toUpperCase()+firstName.slice(1);
+  return {
+    subject: `A free website mockup for ${lead.name} 🎨`,
+    body:
+`Hi ${greetName},
+
+I'm reaching out because I noticed ${lead.name} doesn't have a modern website yet — so I went ahead and built one for you.
+
+I made a free, no-strings one-page site for your ${lead.industry} here in ${lead.city}. You can see it live right now:
+
+👉 ${url}
+
+It has a hero, an about section, and a contact block — all ready to go. If you like it, I can have it fully live on your own domain this week for a small setup fee.
+
+Want me to send over the details?
+
+Best,
+Alex
+SiteSpark`
+  };
+}
+
+// ====== RENDER LEADS ======
+function renderLeads(){
+  const tbody = document.getElementById('leads-body');
+  tbody.innerHTML = '';
+  LEADS.forEach(lead => {
+    const st = state[lead.id];
+    const status = st ? st.status : 'new';
+    const tr = document.createElement('tr');
+    if(lead.id === activeId) tr.className = 'selected';
+    const statusMap = {
+      'new':['s-new','New'], 'preview':['s-preview','Preview ready'],
+      'sent':['s-sent','Sent'], 'opened':['s-opened','Opened'], 'replied':['s-replied','Replied ✓']
+    };
+    const [cls,label] = statusMap[status];
+    tr.innerHTML = `
+      <td><div class="lead-name">${lead.name}</div><div class="lead-sub">${lead.industry} · ${lead.city}</div></td>
+      <td><span class="status ${cls}">${label}</span></td>
+      <td><button class="btn-sm ${status==='new'?'btn-primary':'btn-ghost'}" data-id="${lead.id}">${status==='new'?'Generate':'Open'}</button></td>`;
+    tbody.appendChild(tr);
+  });
+  document.querySelectorAll('#leads-body button').forEach(b=>{
+    b.onclick = ()=> handleLead(parseInt(b.dataset.id));
+  });
+  updateKpis();
+}
+
+function updateKpis(){
+  const vals = Object.values(state);
+  const has = s => vals.filter(v=>['preview','sent','opened','replied'].includes(v.status));
+  document.getElementById('kpi-previews').textContent = vals.filter(v=>v.previewUrl).length;
+  document.getElementById('kpi-sent').textContent = vals.filter(v=>['sent','opened','replied'].includes(v.status)).length;
+  document.getElementById('kpi-opened').textContent = vals.filter(v=>['opened','replied'].includes(v.status)).length;
+  document.getElementById('kpi-replied').textContent = vals.filter(v=>v.status==='replied').length;
+}
+
+// ====== HANDLE LEAD CLICK ======
+function handleLead(id){
+  activeId = id;
+  const lead = LEADS.find(l=>l.id===id);
+  if(!state[id]){
+    // generate
+    generatePreview(lead);
+  } else {
+    renderPreview(lead);
+    renderOutreach(lead);
+  }
+  renderLeads();
+}
+
+function generatePreview(lead){
+  const theme = THEMES[(lead.id-1) % THEMES.length];
+  const url = `https://sitespark.app/preview/${slug(lead.name)}-${lead.id}`;
+  const log = document.getElementById('gen-log');
+  const previewContent = document.getElementById('preview-content');
+  previewContent.innerHTML = '<div class="preview-empty">⚙️ Generating…</div>';
+  const steps = [
+    '→ Prompting LLM with business profile…',
+    '→ Composing hero + about + contact…',
+    '→ Building static bundle…',
+    `→ Deploying to ${url} …`,
+    '✓ Live!'
+  ];
+  let i=0;
+  log.textContent = '';
+  const iv = setInterval(()=>{
+    log.textContent = steps[i];
+    i++;
+    if(i>=steps.length){
+      clearInterval(iv);
+      const siteHtml = generateSiteHtml(lead, theme);
+      state[lead.id] = {
+        status:'preview', previewUrl:url, siteHtml, theme,
+        email: draftEmail(lead, url), tracking:{ sent:null, opened:null, replied:null }
+      };
+      renderPreview(lead);
+      renderOutreach(lead);
+      renderLeads();
+      setTimeout(()=>{ log.textContent=''; }, 1500);
+    }
+  }, 320);
+}
+
+function renderPreview(lead){
+  const st = state[lead.id];
+  if(!st){ return; }
+  const c = document.getElementById('preview-content');
+  c.innerHTML = `
+    <div class="preview-frame-wrap">
+      <div class="browser-bar">
+        <span class="dot" style="background:#ff5f56"></span>
+        <span class="dot" style="background:#ffbd2e"></span>
+        <span class="dot" style="background:#27c93f"></span>
+        <span class="url-pill">${st.previewUrl}</span>
+      </div>
+      <iframe srcdoc="${st.siteHtml.replace(/"/g,'&quot;')}"></iframe>
+    </div>`;
+}
+
+// ====== OUTREACH ======
+function renderOutreach(lead){
+  const st = state[lead.id];
+  if(!st) return;
+  const c = document.getElementById('outreach-content');
+  const e = st.email;
+  const sent = st.status==='sent'||st.status==='opened'||st.status==='replied';
+  const t = st.tracking;
+  c.innerHTML = `
+    <div class="field"><label>To</label><input id="f-to" value="${lead.email}"></div>
+    <div class="field"><label>Subject</label><input id="f-subject" value="${e.subject.replace(/"/g,'&quot;')}"></div>
+    <div class="field"><label>Message (editable)</label><textarea id="f-body">${e.body}</textarea></div>
+    <div class="link-chip">🔗 Live preview: ${st.previewUrl}</div>
+    <button class="btn-send" id="send-btn" ${sent?'disabled':''}>${sent?'✓ Sent via Resend':'Send email via Resend'}</button>
+    <div class="tracker">
+      <div class="track-row ${t.sent?'done':''}"><span class="track-dot"></span> Delivered <span class="track-time">${t.sent||''}</span></div>
+      <div class="track-row ${t.opened?'done':''}"><span class="track-dot"></span> Opened <span class="track-time">${t.opened||''}</span></div>
+      <div class="track-row ${t.replied?'done':''}"><span class="track-dot"></span> Replied <span class="track-time">${t.replied||''}</span></div>
+    </div>
+    <p class="demo-note" style="margin-top:8px">Demo: sending simulates Resend delivery + open/reply tracking webhooks.</p>`;
+  const sb = document.getElementById('send-btn');
+  if(sb && !sent) sb.onclick = ()=> sendEmail(lead);
+}
+
+function nowTime(){ return new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
+
+function sendEmail(lead){
+  const st = state[lead.id];
+  st.email.subject = document.getElementById('f-subject').value;
+  st.email.body = document.getElementById('f-body').value;
+  st.status = 'sent';
+  st.tracking.sent = nowTime();
+  toast(`📨 Email sent to ${lead.email} via Resend`);
+  renderOutreach(lead); renderLeads();
+  // simulate open, then reply
+  setTimeout(()=>{
+    if(state[lead.id].status==='sent'){
+      state[lead.id].status='opened';
+      state[lead.id].tracking.opened = nowTime();
+      if(activeId===lead.id) renderOutreach(lead);
+      renderLeads();
+      toast(`👀 ${lead.name} opened your email`);
+    }
+  }, 2600);
+  setTimeout(()=>{
+    // ~60% reply for demo drama
+    if(state[lead.id].status==='opened' && lead.id % 5 !== 0){
+      state[lead.id].status='replied';
+      state[lead.id].tracking.replied = nowTime();
+      if(activeId===lead.id) renderOutreach(lead);
+      renderLeads();
+      toast(`💬 ${lead.name} replied — "This looks great!"`);
+    }
+  }, 5200);
+}
+
+// ====== BATCH ======
+function batchGenerate(){
+  const targets = LEADS.slice(0,5).filter(l=>!state[l.id]);
+  if(targets.length===0){ toast('First 5 previews already generated'); return; }
+  toast(`⚡ Generating ${targets.length} previews in parallel…`);
+  targets.forEach((lead,idx)=>{
+    setTimeout(()=>{
+      const theme = THEMES[(lead.id-1)%THEMES.length];
+      const url = `https://sitespark.app/preview/${slug(lead.name)}-${lead.id}`;
+      state[lead.id] = {
+        status:'preview', previewUrl:url,
+        siteHtml: generateSiteHtml(lead, theme), theme,
+        email: draftEmail(lead, url), tracking:{sent:null,opened:null,replied:null}
+      };
+      renderLeads();
+      if(idx===targets.length-1){
+        activeId = LEADS[0].id;
+        renderPreview(LEADS[0]); renderOutreach(LEADS[0]); renderLeads();
+        toast('✅ 5 previews live — pick one and send!');
+      }
+    }, 500*(idx+1));
+  });
+}
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+document.getElementById('batch-btn').onclick = batchGenerate;
+renderLeads();
+</script>
+</body>
+</html>
