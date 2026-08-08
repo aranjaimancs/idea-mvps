@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Guesstimate — Daily Absurd Market-Sizing</title>
+<style>
+  :root {
+    --bg: #0f1226;
+    --card: #1a1f3d;
+    --accent: #ffcc4d;
+    --accent2: #6c8cff;
+    --text: #f4f5fb;
+    --muted: #9aa0c4;
+    --good: #4ade80;
+    --line: #2c3260;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(1200px 600px at 50% -10%, #232a55 0%, var(--bg) 60%);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 24px 16px 60px;
+  }
+  .wrap { width: 100%; max-width: 560px; }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 800; letter-spacing: .5px; font-size: 20px; margin-bottom: 4px;
+  }
+  .brand .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 18px var(--accent); }
+  .date { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  .card {
+    background: linear-gradient(180deg, var(--card), #161a34);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.35);
+  }
+  .qlabel { color: var(--accent); font-size: 12px; text-transform: uppercase; letter-spacing: 1.4px; font-weight: 700; }
+  h1 { font-size: 22px; line-height: 1.35; margin: 8px 0 18px; }
+  .hints { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+  .hint {
+    background: #12162e; border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px 14px; font-size: 14px; color: var(--muted);
+    animation: pop .25s ease;
+  }
+  .hint b { color: var(--accent2); }
+  @keyframes pop { from { opacity: 0; transform: translateY(-6px);} to {opacity:1; transform:none;} }
+  button {
+    font: inherit; cursor: pointer; border: none; border-radius: 12px;
+    padding: 12px 16px; font-weight: 700; transition: transform .05s ease, filter .15s ease;
+  }
+  button:active { transform: scale(.98); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-ghost { background: #232a55; color: var(--text); border: 1px solid var(--line); width: 100%; }
+  .btn-primary { background: linear-gradient(90deg, var(--accent), #ffb020); color: #201400; width: 100%; }
+  .guess-row { display: flex; gap: 10px; margin: 6px 0 14px; }
+  .money { position: relative; flex: 1; }
+  .money span { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-weight: 700; }
+  input[type="text"] {
+    width: 100%; padding: 13px 14px 13px 28px; border-radius: 12px;
+    border: 1px solid var(--line); background: #12162e; color: var(--text); font-size: 16px; font-weight: 600;
+  }
+  input:focus { outline: 2px solid var(--accent2); }
+  .result { margin-top: 18px; }
+  .verdict { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+  .verdict.hit { color: var(--good); }
+  .verdict.miss { color: var(--accent); }
+  .range-box {
+    background: #12162e; border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 12px;
+  }
+  .range-box .big { font-size: 22px; font-weight: 800; color: var(--accent2); }
+  .logic { font-size: 14px; color: var(--muted); line-height: 1.55; }
+  .share {
+    background: #0c0f22; border: 1px dashed var(--line); border-radius: 12px;
+    padding: 14px; font-size: 13px; white-space: pre-wrap; color: var(--text); margin: 14px 0 10px; line-height: 1.5;
+  }
+  .copied { color: var(--good); font-size: 13px; margin-left: 8px; }
+  .footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 18px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand"><span class="dot"></span> Guesstimate</div>
+    <div class="date" id="date"></div>
+
+    <div class="card">
+      <div class="qlabel">Today's Absurd Question</div>
+      <h1 id="question"></h1>
+
+      <div class="hints" id="hints"></div>
+      <button class="btn-ghost" id="hintBtn">💡 Reveal a hint (0/3)</button>
+
+      <div id="guessArea" style="margin-top:16px;">
+        <div class="guess-row">
+          <div class="money"><span>$</span><input type="text" id="guess" inputmode="numeric" placeholder="Your guess" /></div>
+        </div>
+        <button class="btn-primary" id="submitBtn">Lock in my guess</button>
+      </div>
+
+      <div class="result hidden" id="result">
+        <div class="verdict" id="verdict"></div>
+        <div class="range-box">
+          <div style="color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:1px;">Accepted answer range</div>
+          <div class="big" id="rangeText"></div>
+        </div>
+        <div class="logic" id="logic"></div>
+        <div class="share" id="share"></div>
+        <button class="btn-primary" id="copyBtn">📋 Copy shareable result</button>
+        <span class="copied hidden" id="copied">Copied!</span>
+      </div>
+
+      <div class="footer" id="lockNote"></div>
+    </div>
+
+    <div class="footer">Come back tomorrow for a new impossible number. 🔮</div>
+  </div>
+
+<script>
+// ---- Hardcoded daily question data ----
+const DAILY = {
+  id: "2026-08-08",
+  question: "How much money do New Yorkers spend annually on umbrellas they lose within a week?",
+  hints: [
+    "NYC has roughly <b>8.3 million</b> residents.",
+    "Assume about <b>1 in 4</b> buys a cheap street umbrella after a surprise downpour.",
+    "A bodega umbrella runs <b>~$8</b>, and most people repeat this a few times a year."
+  ],
+  low: 60000000,
+  high: 200000000,
+  answerLabel: "$60 million – $200 million / year",
+  logic: "8.3M residents × ~25% who impulse-buy a cheap umbrella (≈2M people) × ~2–4 losses per year × ~$8 each ≈ $60M–$200M. The wide range reflects how often people actually lose them."
+};
+
+const KEY = "guesstimate:" + DAILY.id;
+
+// ---- Setup ----
+document.getElementById("date").textContent = new Date(DAILY.id + "T00:00:00").toLocaleDateString(undefined, {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+document.getElementById("question").textContent = DAILY.question;
+
+let hintsShown = 0;
+const hintBtn = document.getElementById("hintBtn");
+const hintsEl = document.getElementById("hints");
+
+hintBtn.addEventListener("click", () => {
+  if (hintsShown >= DAILY.hints.length) return;
+  const d = document.createElement("div");
+  d.className = "hint";
+  d.innerHTML = "<b>Hint " + (hintsShown+1) + ":</b> " + DAILY.hints[hintsShown];
+  hintsEl.appendChild(d);
+  hintsShown++;
+  hintBtn.textContent = "💡 Reveal a hint (" + hintsShown + "/3)";
+  if (hintsShown >= DAILY.hints.length) { hintBtn.disabled = true; hintBtn.textContent = "💡 All hints revealed"; }
+});
+
+function fmt(n){ return "$" + Number(n).toLocaleString(); }
+
+function showResult(guessNum){
+  const hit = guessNum >= DAILY.low && guessNum <= DAILY.high;
+  document.getElementById("guessArea").classList.add("hidden");
+  document.getElementById("result").classList.remove("hidden");
+
+  const verdict = document.getElementById("verdict");
+  verdict.textContent = hit ? "🎯 Nailed it — you're in the range!" : "😅 Off the mark — but that's the fun.";
+  verdict.className = "verdict " + (hit ? "hit" : "miss");
+
+  document.getElementById("rangeText").textContent = DAILY.answerLabel;
+  document.getElementById("logic").textContent = "Estimation logic: " + DAILY.logic;
+
+  const shareText =
+    "🔮 Guesstimate — " + DAILY.id + "\n" +
+    DAILY.question + "\n\n" +
+    "My guess: " + fmt(guessNum) + "\n" +
+    "Actual range: " + DAILY.answerLabel + "\n" +
+    (hit ? "✅ In range!" : "❌ Out of range") + "\n\n" +
+    "Logic: " + DAILY.logic;
+  document.getElementById("share").textContent = shareText;
+
+  document.getElementById("copyBtn").onclick = async () => {
+    try { await navigator.clipboard.writeText(shareText); }
+    catch(e){ const t=document.createElement('textarea'); t.value=shareText; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+    document.getElementById("copied").classList.remove("hidden");
+  };
+
+  document.getElementById("lockNote").textContent = "You've played today. New question tomorrow!";
+}
+
+document.getElementById("submitBtn").addEventListener("click", () => {
+  const raw = document.getElementById("guess").value.replace(/[^0-9.]/g, "");
+  if (!raw) { alert("Enter a number first!"); return; }
+  const guessNum = Math.round(parseFloat(raw));
+  localStorage.setItem(KEY, JSON.stringify({ guess: guessNum }));
+  showResult(guessNum);
+});
+
+// ---- Prevent multiple guesses per day ----
+const saved = localStorage.getItem(KEY);
+if (saved) {
+  try { showResult(JSON.parse(saved).guess); } catch(e){}
+}
+</script>
+</body>
+</html>
