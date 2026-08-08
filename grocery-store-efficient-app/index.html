@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Aisle Sort — Safeway on Market St</title>
+<style>
+  :root {
+    --bg: #f4f6f8;
+    --card: #ffffff;
+    --ink: #1c2733;
+    --muted: #6b7885;
+    --accent: #2f7d4f;
+    --accent-dark: #245e3c;
+    --line: #e3e8ee;
+    --warn: #b45309;
+    --warnbg: #fef3c7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.45;
+  }
+  header {
+    background: var(--accent);
+    color: #fff;
+    padding: 20px 20px 16px;
+  }
+  header h1 { margin: 0 0 4px; font-size: 20px; }
+  header p { margin: 0; font-size: 13px; opacity: 0.9; }
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 720px) { .wrap { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  h2 { font-size: 15px; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  textarea {
+    width: 100%;
+    height: 220px;
+    resize: vertical;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  .btn {
+    margin-top: 12px;
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn:hover { background: var(--accent-dark); }
+  .btn.secondary { background: #eef1f4; color: var(--ink); margin-top: 8px; }
+  .aisle { margin-bottom: 18px; }
+  .aisle-head {
+    display: flex; align-items: baseline; gap: 8px;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 4px; margin-bottom: 8px;
+  }
+  .aisle-num {
+    background: var(--accent); color: #fff; font-size: 12px; font-weight: 700;
+    border-radius: 6px; padding: 2px 8px;
+  }
+  .aisle-name { font-weight: 700; text-transform: capitalize; }
+  ul.items { list-style: none; margin: 0; padding: 0; }
+  ul.items li {
+    padding: 6px 8px; border-radius: 6px; display: flex;
+    justify-content: space-between; align-items: center; gap: 10px;
+  }
+  ul.items li:nth-child(odd) { background: #f7f9fb; }
+  .item-name { text-transform: capitalize; }
+  .unmatched-badge { font-size: 11px; color: var(--warn); background: var(--warnbg); padding: 1px 6px; border-radius: 4px; }
+  select {
+    font-size: 12px; padding: 3px 6px; border: 1px solid var(--line); border-radius: 6px;
+  }
+  .empty { color: var(--muted); font-size: 14px; }
+  .map { font-size: 12px; color: var(--muted); margin-top: 14px; }
+  .map span { display: inline-block; margin: 2px 4px 2px 0; padding: 2px 6px; background: #eef1f4; border-radius: 4px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🛒 Aisle Sort</h1>
+  <p>Reorders your grocery list to match a one-directional walk through <strong>Safeway — 15th & Market St, San Francisco</strong>.</p>
+</header>
+
+<div class="wrap">
+  <section class="card">
+    <h2>Your list (one item per line)</h2>
+    <textarea id="input" placeholder="milk&#10;bananas&#10;frozen pizza&#10;chicken breast&#10;bread&#10;shampoo&#10;eggs&#10;coffee"></textarea>
+    <button class="btn" id="sortBtn">Sort by aisle →</button>
+    <button class="btn secondary" id="sampleBtn">Load a sample list</button>
+    <div class="map" id="storeMap"></div>
+  </section>
+
+  <section class="card">
+    <h2>Walk order</h2>
+    <div id="output"><p class="empty">Type a list and press <em>Sort by aisle</em> to see your walking order.</p></div>
+  </section>
+</div>
+
+<script>
+// ===== HARDCODED STORE LAYOUT =====
+// Safeway at 15th & Market St, San Francisco — front-to-back, left-to-right walking order.
+// "order" = physical sequence you encounter aisles as you walk one direction.
+const STORE = [
+  { id: 'produce',   name: 'Produce',            order: 1,  keywords: ['banana','apple','lettuce','tomato','onion','potato','carrot','avocado','spinach','pepper','broccoli','lemon','lime','garlic','cucumber','celery','berry','strawberr','grape','orange','fruit','veggie','vegetable','salad','herb','cilantro','kale','mushroom'] },
+  { id: 'bakery',    name: 'Bakery & Bread',     order: 2,  keywords: ['bread','bagel','baguette','muffin','croissant','tortilla','bun','roll','cake','donut','pita','naan'] },
+  { id: 'deli',      name: 'Deli',               order: 3,  keywords: ['deli','ham','turkey slice','salami','prosciutto','hummus','olive','rotisserie'] },
+  { id: 'meat',      name: 'Meat & Seafood',     order: 4,  keywords: ['chicken','beef','pork','steak','bacon','sausage','ground','fish','salmon','shrimp','turkey','tofu','ribs','lamb'] },
+  { id: 'dairy',     name: 'Dairy & Eggs',       order: 5,  keywords: ['milk','cheese','yogurt','butter','egg','cream','sour cream','half and half','margarine','kefir'] },
+  { id: 'pantry',    name: 'Pantry & Canned',    order: 6,  keywords: ['pasta','rice','bean','sauce','can','soup','oil','vinegar','flour','sugar','spice','salt','pepper corn','cereal','oat','peanut butter','jam','honey','ketchup','mustard','mayo','broth','noodle','tomato sauce'] },
+  { id: 'snacks',    name: 'Snacks',             order: 7,  keywords: ['chip','cracker','cookie','pretzel','popcorn','candy','chocolate','nut','granola bar','snack'] },
+  { id: 'beverages', name: 'Beverages',          order: 8,  keywords: ['water','soda','juice','coffee','tea','beer','wine','cola','sparkling','drink','kombucha'] },
+  { id: 'frozen',    name: 'Frozen',             order: 9,  keywords: ['frozen','ice cream','pizza','waffle','popsicle','frozen meal','fries'] },
+  { id: 'household', name: 'Household & Paper',   order: 10, keywords: ['paper towel','toilet paper','detergent','soap','dish','trash bag','cleaner','foil','napkin','sponge','bleach'] },
+  { id: 'personal',  name: 'Health & Beauty',    order: 11, keywords: ['shampoo','toothpaste','toothbrush','deodorant','lotion','razor','vitamin','medicine','bandage','conditioner','floss'] }
+];
+
+const UNMATCHED = { id: '__none__', name: 'Not matched', order: 999 };
+
+function matchCategory(rawItem) {
+  const item = rawItem.toLowerCase();
+  for (const aisle of STORE) {
+    for (const kw of aisle.keywords) {
+      if (item.includes(kw)) return aisle.id;
+    }
+  }
+  return UNMATCHED.id;
+}
+
+function getAisle(id) { return STORE.find(a => a.id === id) || UNMATCHED; }
+
+let currentItems = []; // {name, catId}
+
+function parseAndMatch() {
+  const lines = document.getElementById('input').value
+    .split('\n').map(s => s.trim()).filter(Boolean);
+  currentItems = lines.map(name => ({ name, catId: matchCategory(name) }));
+  render();
+}
+
+function render() {
+  const out = document.getElementById('output');
+  if (currentItems.length === 0) {
+    out.innerHTML = '<p class="empty">No items yet. Add some to your list.</p>';
+    return;
+  }
+  // group by category
+  const groups = {};
+  currentItems.forEach((it, idx) => {
+    (groups[it.catId] = groups[it.catId] || []).push({ ...it, idx });
+  });
+  // order aisles by physical order; unmatched last
+  const orderedIds = Object.keys(groups).sort((a, b) => getAisle(a).order - getAisle(b).order);
+
+  let html = '';
+  orderedIds.forEach(catId => {
+    const aisle = getAisle(catId);
+    const isUnmatched = catId === UNMATCHED.id;
+    html += '<div class="aisle">';
+    html += '<div class="aisle-head">';
+    if (!isUnmatched) html += '<span class="aisle-num">' + aisle.order + '</span>';
+    html += '<span class="aisle-name">' + aisle.name + '</span></div>';
+    html += '<ul class="items">';
+    groups[catId].forEach(it => {
+      html += '<li><span class="item-name">' + escapeHtml(it.name) + '</span>';
+      // override dropdown
+      let sel = '<select data-idx="' + it.idx + '">';
+      sel += '<option value="__none__"' + (catId === '__none__' ? ' selected' : '') + '>— pick aisle —</option>';
+      STORE.forEach(a => {
+        sel += '<option value="' + a.id + '"' + (a.id === catId ? ' selected' : '') + '>' + a.name + '</option>';
+      });
+      sel += '</select>';
+      if (isUnmatched) html += '<span class="unmatched-badge">choose aisle</span>';
+      html += sel + '</li>';
+    });
+    html += '</ul></div>';
+  });
+  out.innerHTML = html;
+
+  out.querySelectorAll('select').forEach(s => {
+    s.addEventListener('change', e => {
+      const idx = +e.target.getAttribute('data-idx');
+      currentItems[idx].catId = e.target.value;
+      render();
+    });
+  });
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+document.getElementById('sortBtn').addEventListener('click', parseAndMatch);
+document.getElementById('sampleBtn').addEventListener('click', () => {
+  document.getElementById('input').value =
+    'bananas\nmilk\nfrozen pizza\nchicken breast\nsourdough bread\nshampoo\neggs\ncoffee\ntortilla chips\nsparkling water\npaper towels\ngreek yogurt\nunicorn dust';
+  parseAndMatch();
+});
+
+// show the store map
+document.getElementById('storeMap').innerHTML =
+  '<strong>Store layout:</strong> ' + STORE.map(a => '<span>' + a.order + '. ' + a.name + '</span>').join('');
+</script>
+</body>
+</html>
