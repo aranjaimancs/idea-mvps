@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InternTrack — Daily Internship Aggregator</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --border: #2a2f3a;
+    --text: #e7ebf0;
+    --muted: #9aa4b2;
+    --accent: #4f8cff;
+    --accent-soft: #1c2740;
+    --new: #ffd54a;
+    --new-bg: #2a2410;
+    --green: #34d399;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(1200px 600px at 80% -10%, #1a2030 0%, var(--bg) 60%);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), #7b5cff);
+    display: grid; place-items: center; font-weight: 800; font-size: 18px;
+  }
+  h1 { font-size: 18px; margin: 0; }
+  .sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .userbox { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+  .badge {
+    background: var(--accent-soft); color: var(--accent);
+    padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  }
+  main { max-width: 1080px; margin: 0 auto; padding: 24px; }
+
+  .toolbar {
+    display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+    margin-bottom: 16px;
+  }
+  .search {
+    flex: 1; min-width: 220px;
+    display: flex; align-items: center; gap: 8px;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 12px;
+  }
+  .search input {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: var(--text); font-size: 14px;
+  }
+  .search svg { flex: none; }
+  select, .btn {
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; font-size: 14px; cursor: pointer;
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+  .tab {
+    padding: 8px 14px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--panel);
+    font-size: 13px; color: var(--muted);
+  }
+  .tab.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+  .stat { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .stat b { color: var(--new); }
+
+  .table-wrap {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 14px 16px; font-size: 14px; }
+  th {
+    background: var(--panel-2); color: var(--muted); font-weight: 600;
+    font-size: 12px; text-transform: uppercase; letter-spacing: .04em;
+    cursor: pointer; user-select: none; white-space: nowrap;
+  }
+  th .arrow { opacity: .5; font-size: 10px; }
+  tbody tr { border-top: 1px solid var(--border); }
+  tbody tr:hover { background: var(--panel-2); }
+  tr.is-new { background: var(--new-bg); }
+  tr.is-new:hover { background: #322b12; }
+  .company { font-weight: 600; }
+  .title-cell { color: var(--text); }
+  .new-pill {
+    display: inline-block; margin-left: 8px;
+    background: var(--new); color: #2a2410; font-weight: 700;
+    font-size: 10px; padding: 2px 7px; border-radius: 999px;
+    vertical-align: middle;
+  }
+  td.date { color: var(--muted); white-space: nowrap; }
+  a.link { color: var(--accent); text-decoration: none; font-size: 13px; }
+  a.link:hover { text-decoration: underline; }
+  .save-btn {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--muted); border-radius: 8px; padding: 6px 12px;
+    font-size: 13px; cursor: pointer; white-space: nowrap;
+  }
+  .save-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .save-btn.saved { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .empty { padding: 40px; text-align: center; color: var(--muted); }
+  footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px; }
+  .refresh-note {
+    display: flex; align-items: center; gap: 8px;
+    color: var(--muted); font-size: 12px; margin-left: auto;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--panel-2); border: 1px solid var(--border);
+    padding: 12px 18px; border-radius: 10px; font-size: 14px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.4); opacity: 0;
+    transition: opacity .2s, transform .2s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">IT</div>
+    <div>
+      <h1>InternTrack</h1>
+      <div class="sub">Daily internship aggregator · single-source (RemoteOK)</div>
+    </div>
+  </div>
+  <div class="userbox">
+    <span class="badge">● Live</span>
+    <span>Signed in as <b id="userEmail">you@student.edu</b></span>
+  </div>
+</header>
+
+<main>
+  <div class="toolbar">
+    <div class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9aa4b2" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="search" type="text" placeholder="Search company or title…" />
+    </div>
+    <select id="sortSelect">
+      <option value="date-desc">Newest first</option>
+      <option value="date-asc">Oldest first</option>
+      <option value="company-asc">Company A–Z</option>
+      <option value="title-asc">Title A–Z</option>
+    </select>
+    <button class="btn" id="refreshBtn">↻ Refresh feed</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-view="all">All postings</div>
+    <div class="tab" data-view="new">New since last visit</div>
+    <div class="tab" data-view="saved">Saved</div>
+  </div>
+
+  <div class="stat" id="stat"></div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th data-key="company">Company <span class="arrow"></span></th>
+          <th data-key="title">Title <span class="arrow"></span></th>
+          <th data-key="date">Posted <span class="arrow">▼</span></th>
+          <th>Link</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty" id="empty" style="display:none;">No postings match your filters.</div>
+  </div>
+
+  <div class="refresh-note" style="margin-top:12px;">
+    <span class="dot"></span>
+    <span>Auto-refreshes daily via Vercel Cron → Supabase Edge Function. Last refresh: <span id="lastRefresh"></span></span>
+  </div>
+</main>
+
+<footer>
+  InternTrack MVP — prototype with mocked RemoteOK data. Concept test: is a single-source aggregator valuable enough to add more sources?
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// InternTrack MVP — mocked single-source (RemoteOK) internship feed.
+// Demonstrates: searchable + sortable table, Save (persisted in
+// localStorage as a stand-in for the Supabase user table), and
+// "new since last visit" highlighting (stand-in for the daily
+// Vercel Cron -> Supabase Edge Function refresh).
+// ============================================================
+
+const DAY = 86400000;
+const now = Date.now();
+
+// Simulated postings pulled from the feed, filtered by keyword 'intern'.
+const BASE_POSTINGS = [
+  { id: 'rok-101', company: 'Stripe',        title: 'Software Engineering Intern (Summer 2026)',   posted: now - 1*DAY,  url: 'https://remoteok.com/l/101' },
+  { id: 'rok-102', company: 'Notion',        title: 'Product Design Intern',                        posted: now - 2*DAY,  url: 'https://remoteok.com/l/102' },
+  { id: 'rok-103', company: 'Vercel',        title: 'Developer Relations Intern',                   posted: now - 2*DAY,  url: 'https://remoteok.com/l/103' },
+  { id: 'rok-104', company: 'Airbnb',        title: 'Data Science Intern',                          posted: now - 3*DAY,  url: 'https://remoteok.com/l/104' },
+  { id: 'rok-105', company: 'GitLab',        title: 'Backend Engineering Intern (Ruby)',            posted: now - 4*DAY,  url: 'https://remoteok.com/l/105' },
+  { id: 'rok-106', company: 'Cloudflare',    title: 'Security Research Intern',                     posted: now - 5*DAY,  url: 'https://remoteok.com/l/106' },
+  { id: 'rok-107', company: 'Zapier',        title: 'Marketing Analytics Intern',                   posted: now - 6*DAY,  url: 'https://remoteok.com/l/107' },
+  { id: 'rok-108', company: 'DuckDuckGo',    title: 'ML Engineering Intern',                        posted: now - 7*DAY,  url: 'https://remoteok.com/l/108' },
+  { id: 'rok-109', company: 'Automattic',    title: 'Frontend Intern (React)',                      posted: now - 8*DAY,  url: 'https://remoteok.com/l/109' },
+  { id: 'rok-110', company: 'Buffer',        title: 'Content Strategy Intern',                      posted: now - 9*DAY,  url: 'https://remoteok.com/l/110' },
+];
+
+// Postings that appear only after a "daily refresh" — used to show
+// the "new since last visit" highlight when the user comes back.
+const FRESH_POSTINGS = [
+  { id: 'rok-201', company: 'OpenAI',    title: 'Research Engineering Intern',        posted: now,          url: 'https://remoteok.com/l/201' },
+  { id: 'rok-202', company: 'Figma',     title: 'Growth Engineering Intern',          posted: now - 0.2*DAY, url: 'https://remoteok.com/l/202' },
+  { id: 'rok-203', company: 'Linear',    title: 'Full-Stack Engineering Intern',      posted: now - 0.4*DAY, url: 'https://remoteok.com/l/203' },
+];
+
+// --- persistence (stand-in for Supabase user-scoped tables) ---
+const LS_SAVED = 'interntrack_saved';
+const LS_SEEN  = 'interntrack_seen';   // ids seen before this session
+const LS_FRESH = 'interntrack_fresh';  // whether fresh batch is live
+
+let saved = new Set(JSON.parse(localStorage.getItem(LS_SAVED) || '[]'));
+let seen  = new Set(JSON.parse(localStorage.getItem(LS_SEEN)  || '[]'));
+let freshLive = localStorage.getItem(LS_FRESH) === '1';
+
+function buildPostings() {
+  let list = [...BASE_POSTINGS];
+  if (freshLive) list = [...FRESH_POSTINGS, ...list];
+  return list;
+}
+let postings = buildPostings();
+
+// A posting is "new" if it wasn't in the set of ids seen on a prior visit.
+function isNew(p) { return !seen.has(p.id); }
+
+// --- state ---
+let currentView = 'all';
+let sortKey = 'date';
+let sortDir = 'desc';
+let query = '';
+
+// --- rendering ---
+const tbody = document.getElementById('tbody');
+const emptyEl = document.getElementById('empty');
+const statEl = document.getElementById('stat');
+
+function fmtDate(ts) {
+  const diff = now - ts;
+  if (diff < DAY) return 'Today';
+  const d = Math.round(diff / DAY);
+  return d === 1 ? 'Yesterday' : d + ' days ago';
+}
+
+function getFiltered() {
+  let list = postings.filter(p => {
+    const q = query.toLowerCase();
+    return p.company.toLowerCase().includes(q) || p.title.toLowerCase().includes(q);
+  });
+  if (currentView === 'new')   list = list.filter(isNew);
+  if (currentView === 'saved') list = list.filter(p => saved.has(p.id));
+
+  list.sort((a, b) => {
+    let av, bv;
+    if (sortKey === 'date') { av = a.posted; bv = b.posted; }
+    else { av = a[sortKey].toLowerCase(); bv = b[sortKey].toLowerCase(); }
+    if (av < bv) return sortDir === 'asc' ? -1 : 1;
+    if (av > bv) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+  return list;
+}
+
+function render() {
+  const list = getFiltered();
+  tbody.innerHTML = '';
+  emptyEl.style.display = list.length ? 'none' : 'block';
+
+  const newCount = postings.filter(isNew).length;
+  statEl.innerHTML = `Showing ${list.length} of ${postings.length} postings · ` +
+    (newCount ? `<b>${newCount} new since your last visit</b>` : 'no new postings') +
+    ` · ${saved.size} saved`;
+
+  for (const p of list) {
+    const tr = document.createElement('tr');
+    if (isNew(p)) tr.className = 'is-new';
+    tr.innerHTML = `
+      <td class="company">${p.company}</td>
+      <td class="title-cell">${p.title}${isNew(p) ? '<span class="new-pill">NEW</span>' : ''}</td>
+      <td class="date">${fmtDate(p.posted)}</td>
+      <td><a class="link" href="${p.url}" target="_blank" rel="noopener">View ↗</a></td>
+      <td><button class="save-btn ${saved.has(p.id) ? 'saved' : ''}" data-id="${p.id}">
+        ${saved.has(p.id) ? '✓ Saved' : '☆ Save'}
+      </button></td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+// --- interactions ---
+document.getElementById('search').addEventListener('input', e => {
+  query = e.target.value; render();
+});
+
+document.getElementById('sortSelect').addEventListener('change', e => {
+  const [k, d] = e.target.value.split('-');
+  sortKey = k; sortDir = d;
+  syncHeaderArrows();
+  render();
+});
+
+document.querySelectorAll('th[data-key]').forEach(th => {
+  th.addEventListener('click', () => {
+    const key = th.dataset.key;
+    if (sortKey === key) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    else { sortKey = key; sortDir = key === 'date' ? 'desc' : 'asc'; }
+    document.getElementById('sortSelect').value = `${sortKey}-${sortDir}`;
+    syncHeaderArrows();
+    render();
+  });
+});
+
+function syncHeaderArrows() {
+  document.querySelectorAll('th[data-key]').forEach(th => {
+    const arrow = th.querySelector('.arrow');
+    arrow.textContent = th.dataset.key === sortKey ? (sortDir === 'asc' ? '▲' : '▼') : '';
+  });
+}
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentView = tab.dataset.view;
+    render();
+  });
+});
+
+tbody.addEventListener('click', e => {
+  const btn = e.target.closest('.save-btn');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (saved.has(id)) { saved.delete(id); toast('Removed from saved'); }
+  else { saved.add(id); toast('Saved to your list'); }
+  localStorage.setItem(LS_SAVED, JSON.stringify([...saved]));
+  render();
+});
+
+// Refresh button simulates the daily cron pulling a fresh batch and
+// flagging new entries since the last visit.
+document.getElementById('refreshBtn').addEventListener('click', () => {
+  // Mark everything currently shown as "seen" (this was the last visit),
+  // then bring in the fresh batch so it lights up as NEW.
+  postings.forEach(p => seen.add(p.id));
+  localStorage.setItem(LS_SEEN, JSON.stringify([...seen]));
+
+  freshLive = true;
+  localStorage.setItem(LS_FRESH, '1');
+  postings = buildPostings();
+
+  setLastRefresh();
+  toast('Feed refreshed — new internships flagged!');
+  render();
+});
+
+function setLastRefresh() {
+  document.getElementById('lastRefresh').textContent =
+    new Date().toLocaleString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// --- init ---
+// On very first ever load, nothing has been "seen" so everything would
+// be NEW. To make the demo feel realistic, mark the base batch as seen
+// the first time, so the "Refresh feed" button clearly reveals new ones.
+if (!localStorage.getItem(LS_SEEN)) {
+  BASE_POSTINGS.forEach(p => seen.add(p.id));
+  localStorage.setItem(LS_SEEN, JSON.stringify([...seen]));
+}
+setLastRefresh();
+syncHeaderArrows();
+render();
+</script>
+</body>
+</html>
